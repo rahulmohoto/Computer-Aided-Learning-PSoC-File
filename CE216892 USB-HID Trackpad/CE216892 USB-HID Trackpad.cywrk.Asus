@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CyXmlSerializer>
+<!--This file is machine generated and read. It is not intended to be edited by hand.-->
+<!--Due to this, there is no schema for this file.-->
+<CyGuid_843a90a4-0c4b-4e44-991d-05e7fb117a21 type_name="CyDesigner.Common.ProjMgmt.Model.CyPrjMgmtWrkspcCustomData" version="4">
+<CyGuid_fdba8dfd-b15b-4469-9bbb-9e40c3e70997 type_name="CyDesigner.Common.Base.CyCustomData" version="2">
+<userData>
+<dataGuid v="1b906a0f-a7b6-4e4d-a428-82f98b53cb35">
+<CyGuid_1b906a0f-a7b6-4e4d-a428-82f98b53cb35 type_name="CyDesigner.Common.ProjMgmt.GUI.CyExplorerWindow+CyExplorerWindowState" version="3" SelectedTab="Source">
+<TreeKeys>
+<v>Source</v>
+<v>Components</v>
+<v>Output</v>
+</TreeKeys>
+<TreeStates>
+<CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237 type_name="CyDesigner.Common.Base.Controls.CyTreeViewState" version="1" SelectedNodeId="CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\Generated_Source">
+<ExpandedNodeIds>
+<v>CE216892 USB-HID Trackpad</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\TopDesign</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.cydwr</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.cydwr\Pins</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.cydwr\Analog</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.cydwr\Clocks</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.cydwr\Interrupts</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.cydwr\System</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.cydwr\Directives</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.cydwr\Flash Security</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\Header Files\cyapicallbacks.h</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\Source Files\main.c</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\Generated_Source\PSoC4</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.pdf</v>
+</ExpandedNodeIds>
+<VisibleNodeIds>
+<v>CE216892 USB-HID Trackpad</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\TopDesign</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.cydwr</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.cydwr\Pins</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.cydwr\Analog</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.cydwr\Clocks</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.cydwr\Interrupts</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.cydwr\System</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.cydwr\Directives</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.cydwr\Flash Security</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\Header Files</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\Source Files</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\Generated_Source</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.pdf</v>
+</VisibleNodeIds>
+</CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237>
+<CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237 type_name="CyDesigner.Common.Base.Controls.CyTreeViewState" version="1" SelectedNodeId="CE216892 USB-HID Trackpad">
+<ExpandedNodeIds>
+<v>CE216892 USB-HID Trackpad</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\TopDesign</v>
+</ExpandedNodeIds>
+<VisibleNodeIds>
+<v>CE216892 USB-HID Trackpad</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\TopDesign</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\TopDesign\TopDesign.cysch</v>
+</VisibleNodeIds>
+</CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237>
+<CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237 type_name="CyDesigner.Common.Base.Controls.CyTreeViewState" version="1" SelectedNodeId="CE216892 USB-HID Trackpad">
+<ExpandedNodeIds>
+<v>CE216892 USB-HID Trackpad</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CapSense_Centroid_LL.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CapSense_Control.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CapSense_Filter.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CapSense_INT.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CapSense_ISR.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CapSense_Processing.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CapSense_Sensing.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CapSense_SensingCSD_LL.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CapSense_Structure.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CapSense_Tuner.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\Cm0plusStart.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\cy_em_eeprom.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CyBootAsmGnu.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\cyfitter_cfg.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CyFlash.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CyLFClk.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CyLib.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\cymetadata.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\cyPm.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\cyutils.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\EZI2C.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\EZI2C_BOOT.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\EZI2C_EZI2C.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\EZI2C_EZI2C_BOOT.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\EZI2C_EZI2C_INT.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\EZI2C_PM.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\EZI2C_SCB_IRQ.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\EZI2C_SCBCLK.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\EZI2C_scl.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\EZI2C_scl_PM.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\EZI2C_sda.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\EZI2C_sda_PM.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\main.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\PROX_GND.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\PROX_GND_PM.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\Red_LED.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\Red_LED_PM.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\CE216892 USB-HID Trackpad.elf</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\CE216892 USB-HID Trackpad.hex</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\CE216892 USB-HID Trackpad.map</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.gpdsc</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.rpt</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad_timing.html</v>
+</ExpandedNodeIds>
+<VisibleNodeIds>
+<v>CE216892 USB-HID Trackpad</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CapSense_Centroid_LL.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CapSense_Control.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CapSense_Filter.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CapSense_INT.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CapSense_ISR.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CapSense_Processing.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CapSense_Sensing.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CapSense_SensingCSD_LL.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CapSense_Structure.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CapSense_Tuner.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\Cm0plusStart.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\cy_em_eeprom.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CyBootAsmGnu.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\cyfitter_cfg.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CyFlash.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CyLFClk.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\CyLib.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\cymetadata.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\cyPm.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\cyutils.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\EZI2C.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\EZI2C_BOOT.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\EZI2C_EZI2C.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\EZI2C_EZI2C_BOOT.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\EZI2C_EZI2C_INT.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\EZI2C_PM.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\EZI2C_SCB_IRQ.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\EZI2C_SCBCLK.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\EZI2C_scl.lst</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CortexM0p\ARM_GCC_541\Debug\Listing Files\EZI2C_scl_PM.lst</v>
+</VisibleNodeIds>
+</CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237>
+</TreeStates>
+<TreeKeysV2>
+<v>Datasheet</v>
+</TreeKeysV2>
+<TreeStatesV2>
+<CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237 type_name="CyDesigner.Common.Base.Controls.CyTreeViewState" version="1" SelectedNodeId="CE216892 USB-HID Trackpad">
+<ExpandedNodeIds>
+<v>CE216892 USB-HID Trackpad</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\PSoC 4 Architecture TRM</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\PSoC 4100S Family Datasheet</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\System Reference Guides</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\System Reference Guides\cy_boot_v6_10</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\System Reference Guides\cy_lfclk_v1_20</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CapSense_P4_v7_0.pdf</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\cy_pins_v2_20</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\cy_pins_v2_20\cy_pins_v2_20.pdf</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\LED_v1_0.pdf</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\Power_v1_0.pdf</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\Resistor_v1_0.pdf</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\SCB_P4_v4_0.pdf</v>
+</ExpandedNodeIds>
+<VisibleNodeIds>
+<v>CE216892 USB-HID Trackpad</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\PSoC 4 Architecture TRM</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\PSoC 4100S Family Datasheet</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\System Reference Guides</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\System Reference Guides\cy_boot_v6_10</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\System Reference Guides\cy_lfclk_v1_20</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\CapSense_P4_v7_0.pdf</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\cy_pins_v2_20</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\cy_pins_v2_20\cy_pins_v2_20.pdf</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\LED_v1_0.pdf</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\Power_v1_0.pdf</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\Resistor_v1_0.pdf</v>
+<v>CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad\SCB_P4_v4_0.pdf</v>
+</VisibleNodeIds>
+</CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237>
+</TreeStatesV2>
+</CyGuid_1b906a0f-a7b6-4e4d-a428-82f98b53cb35>
+</dataGuid>
+</userData>
+</CyGuid_fdba8dfd-b15b-4469-9bbb-9e40c3e70997>
+<Unloaded />
+<OpenDocs>
+<name v=".\CE216892 USB-HID Trackpad.cydsn\CE216892 USB-HID Trackpad.cydwr" />
+<name v=".\CE216892 USB-HID Trackpad.cydsn\main.c" />
+<name v=".\CE216892 USB-HID Trackpad.cydsn\cyapicallbacks.h" />
+<name v=".\CE216892 USB-HID Trackpad.cydsn\TopDesign\TopDesign.cysch" />
+</OpenDocs>
+<OpenDocsLayout><![CDATA[<?xml version="1.0"?><!--
+
+  Actipro Docking/MDI for WinForms
+  Copyright (c) 2001-2016 Actipro Software LLC.  All rights reserved.
+  http://www.actiprosoftware.com
+
+--><DocumentLayout Version="1.0"><LayoutData><TabbedMdiRootContainer Orientation="Horizontal"><TabbedMdiContainer Size="933, 575" SelectedTabbedMdiWindow="06ecbed8-cd07-4e80-a46e-79c7d1bec91a"><ToolWindow Key="Start Page:bd4649ab-da6b-4d04-a663-c722b8bf99db:Start Page" Guid="d2a6bbe7-3147-4837-9ce7-45da2237ecc1" /><DocumentWindow Key="E:\Hackster Projects\Infenion Microcontroller\Infineon-CY8CKIT-041-41XX_Example_Projects-Software-v01_00-EN\PSoC 4100S\CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.cydsn\CE216892 USB-HID Trackpad.cydwr" Guid="b8d6e79a-6e94-432b-b119-40e49545c7f7" /><DocumentWindow Key="E:\Hackster Projects\Infenion Microcontroller\Infineon-CY8CKIT-041-41XX_Example_Projects-Software-v01_00-EN\PSoC 4100S\CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.cydsn\main.c" Guid="1185534c-ec4c-4695-a701-00bc0d1e4e31" /><DocumentWindow Key="E:\Hackster Projects\Infenion Microcontroller\Infineon-CY8CKIT-041-41XX_Example_Projects-Software-v01_00-EN\PSoC 4100S\CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.cydsn\cyapicallbacks.h" Guid="1489cdfe-7f7d-45df-9a68-cf152a943825" /><DocumentWindow Key="E:\Hackster Projects\Infenion Microcontroller\Infineon-CY8CKIT-041-41XX_Example_Projects-Software-v01_00-EN\PSoC 4100S\CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.cydsn\TopDesign\TopDesign.cysch" Guid="06ecbed8-cd07-4e80-a46e-79c7d1bec91a" /></TabbedMdiContainer></TabbedMdiRootContainer><FloatingContainers /></LayoutData></DocumentLayout>]]></OpenDocsLayout>
+<config v="Debug" />
+<AutoUpdate v="true" />
+</CyGuid_843a90a4-0c4b-4e44-991d-05e7fb117a21>
+</CyXmlSerializer>

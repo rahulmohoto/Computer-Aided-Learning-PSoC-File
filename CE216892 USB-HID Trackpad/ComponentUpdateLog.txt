@@ -1,0 +1,12 @@
+Last Modified Date & Time: 12/27/2022 14:07:26
+
+CE216892 USB-HID Trackpad: CE216892 USB-HID Trackpad.cydwr
+	cy_boot [v5.50] to [v6.10]
+	cy_lfclk [v1.10] to [v1.20]
+	LIN_Dynamic [v3.40] to [v6.0]
+
+CE216892 USB-HID Trackpad: TopDesign.cysch
+	CapSense [v3.10] to [v7.0]
+	EZI2C [v3.20] to [v4.0]
+
+

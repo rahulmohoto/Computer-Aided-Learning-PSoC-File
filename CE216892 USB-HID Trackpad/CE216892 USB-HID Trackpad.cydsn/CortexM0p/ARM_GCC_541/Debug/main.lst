@@ -1,0 +1,4843 @@
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m0plus
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"main.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.Timer_Interrupt,"ax",%progbits
+  20              		.align	2
+  21              		.global	Timer_Interrupt
+  22              		.code	16
+  23              		.thumb_func
+  24              		.type	Timer_Interrupt, %function
+  25              	Timer_Interrupt:
+  26              	.LFB38:
+  27              		.file 1 "main.c"
+   1:main.c        **** /******************************************************************************
+   2:main.c        **** * File Name: main.c
+   3:main.c        **** *
+   4:main.c        **** * Version: 1.00
+   5:main.c        **** *
+   6:main.c        **** * Description:  This code example demonstrates how to implement a USB-HID trackpad
+   7:main.c        **** *               using PSoC 4100S CapSense.
+   8:main.c        **** *
+   9:main.c        **** * Related Document: CE216892 USB-HID Trackpad.pdf
+  10:main.c        **** *
+  11:main.c        **** * Hardware Dependency: CY8CKIT-041-41XX PSoC 4100S Pioneer Kit
+  12:main.c        **** *                     (See code example CE216892 for details)
+  13:main.c        **** *
+  14:main.c        **** ******************************************************************************
+  15:main.c        **** * Copyright (2016), Cypress Semiconductor Corporation.
+  16:main.c        **** ******************************************************************************
+  17:main.c        **** * This software, including source code, documentation and related materials
+  18:main.c        **** * ("Software") is owned by Cypress Semiconductor Corporation (Cypress) and is
+  19:main.c        **** * protected by and subject to worldwide patent protection (United States and 
+  20:main.c        **** * foreign), United States copyright laws and international treaty provisions. 
+  21:main.c        **** * Cypress hereby grants to licensee a personal, non-exclusive, non-transferable
+  22:main.c        **** * license to copy, use, modify, create derivative works of, and compile the 
+  23:main.c        **** * Cypress source code and derivative works for the sole purpose of creating 
+  24:main.c        **** * custom software in support of licensee product, such licensee product to be
+  25:main.c        **** * used only in conjunction with Cypress's integrated circuit as specified in the
+  26:main.c        **** * applicable agreement. Any reproduction, modification, translation, compilation,
+  27:main.c        **** * or representation of this Software except as specified above is prohibited 
+  28:main.c        **** * without the express written permission of Cypress.
+  29:main.c        **** * 
+  30:main.c        **** * Disclaimer: THIS SOFTWARE IS PROVIDED AS-IS, WITH NO WARRANTY OF ANY KIND, 
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 2
+
+
+  31:main.c        **** * EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, NONINFRINGEMENT, IMPLIED 
+  32:main.c        **** * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+  33:main.c        **** * Cypress reserves the right to make changes to the Software without notice. 
+  34:main.c        **** * Cypress does not assume any liability arising out of the application or use
+  35:main.c        **** * of Software or any product or circuit described in the Software. Cypress does
+  36:main.c        **** * not authorize its products for use as critical components in any products 
+  37:main.c        **** * where a malfunction or failure may reasonably be expected to result in 
+  38:main.c        **** * significant injury or death ("ACTIVE Risk Product"). By including Cypress's 
+  39:main.c        **** * product in a ACTIVE Risk Product, the manufacturer of such system or application
+  40:main.c        **** * assumes all risk of such use and in doing so indemnifies Cypress against all
+  41:main.c        **** * liability. Use of this Software may be limited by and subject to the applicable
+  42:main.c        **** * Cypress software license agreement.
+  43:main.c        **** *****************************************************************************/
+  44:main.c        **** /*******************************************************************************
+  45:main.c        **** *   Included Headers
+  46:main.c        **** *******************************************************************************/
+  47:main.c        **** #include <project.h>
+  48:main.c        **** 
+  49:main.c        **** /* Include boolean function definition */
+  50:main.c        **** #include <stdbool.h>
+  51:main.c        **** #include <cytypes.h>
+  52:main.c        **** 
+  53:main.c        **** /*******************************************************************************
+  54:main.c        **** *   Macros and #define Constants
+  55:main.c        **** *******************************************************************************/
+  56:main.c        **** 
+  57:main.c        **** /* Enable tuner for CapSense tuning. 
+  58:main.c        **** *  When tuner is enabled, I2C slave is used to transmit 
+  59:main.c        **** *  CapSense tuning data and hence mouse functionality is disabled.
+  60:main.c        **** */
+  61:main.c        **** #define TUNER_ENABLE                (0u)
+  62:main.c        **** #define BUFFER_SIZE                 (16u)
+  63:main.c        **** #define CHECKSUM_BYTES              (2u)
+  64:main.c        **** #define READ_ONLY_OFFSET            (2u)
+  65:main.c        **** #define DUT_ID_CHECK                (0x55u)
+  66:main.c        **** 
+  67:main.c        **** /* I2C buffer index macros */
+  68:main.c        **** #define DUT_ID_INDEX                (0u)
+  69:main.c        **** #define HID_DATA_VALID_INDEX        (1u)   
+  70:main.c        **** #define BYTES_IN_BUFFER_INDEX       (2u)
+  71:main.c        **** #define HID_TYPE_INDEX              (3u)
+  72:main.c        **** #define DATA_BYTE1_INDEX            (4u)
+  73:main.c        **** #define DATA_BYTE2_INDEX            (5u)
+  74:main.c        **** #define DATA_BYTE3_INDEX            (6u)
+  75:main.c        **** #define DATA_BYTE4_INDEX            (7u)
+  76:main.c        **** #define DATA_BYTE5_INDEX            (8u)
+  77:main.c        **** #define DATA_BYTE6_INDEX            (9u)
+  78:main.c        **** #define DATA_BYTE7_INDEX            (10u)
+  79:main.c        **** #define DATA_BYTE8_INDEX            (11u)
+  80:main.c        **** #define DATA_BYTE9_INDEX            (12u)
+  81:main.c        **** #define DATA_BYTE10_INDEX           (13u)
+  82:main.c        **** #define CHECKSUM_MSB_INDEX          (14u)
+  83:main.c        **** #define CHECKSUM_LSB_INDEX          (15u)
+  84:main.c        **** 
+  85:main.c        **** /* HID macros */
+  86:main.c        **** #define MOUSE_FUNCTION				(1u)
+  87:main.c        **** #define MOUSE_DATA_BYTES_COUNT      (5u)
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 3
+
+
+  88:main.c        **** #define HID_DATA_INVALID            (0u)
+  89:main.c        **** #define HID_DATA_VALID              (1u)
+  90:main.c        **** 
+  91:main.c        **** /* Mouse click function macros */
+  92:main.c        **** #define MOUSE_FN_NO_CLICK			(0u)
+  93:main.c        **** #define MOUSE_FN_LEFT_CLICK			(1u)
+  94:main.c        **** #define MOUSE_FN_RIGHT_CLICK		(2u)
+  95:main.c        **** 
+  96:main.c        **** /* Trackpad X and Y coordinate related macros */
+  97:main.c        **** #define X_POSITION                  (0u)
+  98:main.c        **** #define Y_POSITION                  (1u)
+  99:main.c        **** #define X_POSITION_NEGATIVE         (2u)
+ 100:main.c        **** #define Y_POSITION_NEGATIVE         (1u)
+ 101:main.c        **** 
+ 102:main.c        **** /* Threshold for the delta position after which 
+ 103:main.c        **** *  position is scaled by a factor of 2.
+ 104:main.c        **** */
+ 105:main.c        **** #define DELTA_POS_MULT_THRESHOLD    (10u)
+ 106:main.c        **** 
+ 107:main.c        **** /* Device power mode related macros */
+ 108:main.c        **** #define LOOP_TIME_FASTSCANMODE      (20u)
+ 109:main.c        **** #define LOOP_TIME_SLOWSCANMODE      (150u)
+ 110:main.c        **** #define ILO_CLOCK_FACTOR            (40u)
+ 111:main.c        ****     
+ 112:main.c        **** /* Refresh rate control parameters */    
+ 113:main.c        **** /* Scan period is LOOP_TIME_FASTSCANMODE in FAST_SCAN_MODE */    
+ 114:main.c        **** #define WDT_TIMEOUT_FAST_SCAN       (ILO_CLOCK_FACTOR * LOOP_TIME_FASTSCANMODE) 
+ 115:main.c        ****     
+ 116:main.c        ****  /* Scan period is LOOP_TIME_SLOWSCANMODE in SLOW_SCAN_MODE */    
+ 117:main.c        **** #define WDT_TIMEOUT_SLOW_SCAN       (ILO_CLOCK_FACTOR * LOOP_TIME_SLOWSCANMODE)
+ 118:main.c        **** 
+ 119:main.c        **** /* This timeout is for device scan mode shift from fast scan to slow scan if there is
+ 120:main.c        ****    no proximity  detected. 2
+ 121:main.c        **** */
+ 122:main.c        **** #define SCANMODE_TIMEOUT_VALUE      (150u)
+ 123:main.c        **** 
+ 124:main.c        **** #define FALSE                       (false)
+ 125:main.c        **** #define TRUE                        (true)
+ 126:main.c        **** 
+ 127:main.c        **** #define LED_ON                      (0u)
+ 128:main.c        **** #define LED_OFF                     (1u)
+ 129:main.c        ****     
+ 130:main.c        **** /* Interrupt number for watchdog */    
+ 131:main.c        **** #define WDT_IRQ_NUMBER              (6u)
+ 132:main.c        ****     
+ 133:main.c        **** /* Software timer reset value */
+ 134:main.c        **** #define SW_TIMER_RESET              (0u)  
+ 135:main.c        **** 
+ 136:main.c        **** /*******************************************************************************
+ 137:main.c        **** *   Module Variable and Constant Declarations with Applicable Initializations
+ 138:main.c        **** *******************************************************************************/
+ 139:main.c        **** /* Finite state machine states for device operation */
+ 140:main.c        **** typedef enum
+ 141:main.c        **** {
+ 142:main.c        ****     SENSOR_SCAN =            1u,   /* Sensor is scanned in this state */
+ 143:main.c        ****     WAIT_FOR_SCAN_COMPLETE = 2u,   /* CPU is put to sleep in this state */
+ 144:main.c        ****     PROCESS_DATA =           3u,   /* Sensor data is processed */
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 4
+
+
+ 145:main.c        ****     DEEP_SLEEP =             4u    /* Device is put to deep sleep */
+ 146:main.c        **** } DEVICE_STATE;
+ 147:main.c        **** 
+ 148:main.c        **** /* Firmware implements two refresh rates for reducing average power consumption */
+ 149:main.c        **** typedef enum
+ 150:main.c        **** {
+ 151:main.c        ****     SLOW_SCAN_MODE = 0u,
+ 152:main.c        ****     FAST_SCAN_MODE = 1u
+ 153:main.c        **** } SCAN_MODE;
+ 154:main.c        **** 
+ 155:main.c        **** /* This variable is used to indicate the power mode */
+ 156:main.c        **** SCAN_MODE deviceScanMode;
+ 157:main.c        **** 
+ 158:main.c        **** /* Variable indicates if trackpad is touched or not */
+ 159:main.c        **** uint16 fingerStatus;
+ 160:main.c        **** 
+ 161:main.c        **** /* Variable to store X, Y touch coordinates */
+ 162:main.c        **** uint16 touchPosition[2];
+ 163:main.c        **** 
+ 164:main.c        **** /* Contains previous active X, Y coordinates of trackpad */
+ 165:main.c        **** uint16 prevTouchPosition[2];
+ 166:main.c        **** 
+ 167:main.c        **** /* Contains DeltaX and DeltaY trackpad coordinates, used for HID (mouse) */
+ 168:main.c        **** uint16 diffPosition[2];
+ 169:main.c        **** 
+ 170:main.c        **** /* Contains information of whether DeltaX and DeltaY is negative */
+ 171:main.c        **** uint8 xyDirectionData;
+ 172:main.c        **** 
+ 173:main.c        **** /* Contains mouse left and right click data */
+ 174:main.c        **** uint8 mouseClickData;
+ 175:main.c        **** 
+ 176:main.c        **** /* I2C buffer to store HID mouse related information */
+ 177:main.c        **** volatile uint8 ezI2cBuffer[BUFFER_SIZE];
+ 178:main.c        **** 
+ 179:main.c        **** /* Variable to check if device woke up because of WDT interrupt or other sources */
+ 180:main.c        **** volatile uint8 wdtInterruptOccured = FALSE;
+ 181:main.c        **** 
+ 182:main.c        **** /* Watchdog timer match value. Device starts with fast scan mode after power-up */
+ 183:main.c        **** volatile uint32 wdtMatchValue = WDT_TIMEOUT_FAST_SCAN;
+ 184:main.c        **** 
+ 185:main.c        **** /*******************************************************************************
+ 186:main.c        **** *  Function Declarations
+ 187:main.c        **** *******************************************************************************/
+ 188:main.c        **** 
+ 189:main.c        **** /* Function prototype for CapSense parameter initialization */
+ 190:main.c        **** void capSenseInit(void);
+ 191:main.c        **** 
+ 192:main.c        **** /* Function prototype to process trackpad data and update I2C buffer */
+ 193:main.c        **** void mouseDataProcess(void);
+ 194:main.c        **** 
+ 195:main.c        **** /* Function prototype to initialize EZI2C component */
+ 196:main.c        **** void i2cInit(void);
+ 197:main.c        **** 
+ 198:main.c        **** /* Function prototype to update I2C buffer with trackpad and button sensor status*/
+ 199:main.c        **** void updateI2cBuffer(void);
+ 200:main.c        **** 
+ 201:main.c        **** /* Function prototype to start watchdog timer */
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 5
+
+
+ 202:main.c        **** void WDT_Start(void);
+ 203:main.c        **** 
+ 204:main.c        **** /* Function prototype to put the device to deep sleep */
+ 205:main.c        **** void enterDeepSleepLowPowerMode(void);
+ 206:main.c        **** 
+ 207:main.c        **** /* Function that checks if trackpad or button sensors are ON */
+ 208:main.c        **** bool anyWidgetActive(void);
+ 209:main.c        **** 
+ 210:main.c        **** /* API to get WDT match value to generate accurate scan intervals */
+ 211:main.c        **** void CalibrateWdtMatchValue(void);
+ 212:main.c        **** 
+ 213:main.c        **** /******************************************************************************
+ 214:main.c        **** * Function Name: main
+ 215:main.c        **** *******************************************************************************
+ 216:main.c        **** *
+ 217:main.c        **** * Summary: This funcation implements the state machine for device operation.
+ 218:main.c        **** *
+ 219:main.c        **** * Parameters:
+ 220:main.c        **** *  None.
+ 221:main.c        **** *
+ 222:main.c        **** * Return:
+ 223:main.c        **** *  None.
+ 224:main.c        **** *
+ 225:main.c        **** * Theory: 
+ 226:main.c        **** *   main() performs following functions:
+ 227:main.c        **** *  1: Initialize the CapSense, EZI2C Components
+ 228:main.c        **** *  2: There are two modes of operation
+ 229:main.c        **** *       Slow scan mode : Only gang sensor (all rows & columns of trackpad, left and right 
+ 230:main.c        **** *                       buttons are ganged) is scanned at LOOP_TIME_SLOWSCANMODE loop time
+ 231:main.c        **** *       Fast scan mode : Trackpad and button widgets are are scanned at LOOP_TIME_FASTSCANMODE loop
+ 232:main.c        **** *       By default, device is in fast scan mode. In fast scan mode, all the sensors are scanned
+ 233:main.c        **** *       individually. If no CapSense widgets are active for SCANMODE_TIMEOUT_VALUE, the operating 
+ 234:main.c        **** *       mode is changed to slow scan mode to reduce device power consumption.
+ 235:main.c        **** *  3: Once all the CapSense widgets are scanned, the I2C buffer is updated with the 
+ 236:main.c        **** *       following information
+ 237:main.c        **** *       a) LeftClick and RightClick button information is updated
+ 238:main.c        **** *       b) DeltaX and DeltaY of touch coordinates with sign information is updated
+ 239:main.c        **** *      All the above data is read by the Host (PSoC 5LP) via I2C interface. The host interfaces 
+ 240:main.c        **** *      to PC as a USB-HID device.
+ 241:main.c        **** *  4: After CapSense data is processed, the device is put to deep sleep mode
+ 242:main.c        **** * 
+ 243:main.c        **** * Side Effects: None
+ 244:main.c        **** *
+ 245:main.c        **** * Note:None
+ 246:main.c        **** *
+ 247:main.c        **** *******************************************************************************/
+ 248:main.c        **** 
+ 249:main.c        **** int main()
+ 250:main.c        **** {   
+ 251:main.c        ****     /* This code implements two application level power modes: 
+ 252:main.c        ****     *  Fast Scan mode and Slow Scan mode */
+ 253:main.c        ****     
+ 254:main.c        ****     /* Start the firmware state machine with sensor scan */
+ 255:main.c        ****     DEVICE_STATE currentState = SENSOR_SCAN;
+ 256:main.c        ****     
+ 257:main.c        ****     /* Variable to check for timeout condition of sensor inactive condition */
+ 258:main.c        ****     uint32 timeoutCounter = 0u;
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 6
+
+
+ 259:main.c        ****     
+ 260:main.c        ****     /* Variable to hold the widget# that should be scanned in FAST_SCAN_MODE */
+ 261:main.c        ****     uint8 currentWidget = CapSense_TRACKPAD_WDGT_ID;
+ 262:main.c        ****     
+ 263:main.c        ****     /* Variable to store the XY touch coordinates */
+ 264:main.c        ****     uint32 tempCoordinates;
+ 265:main.c        ****     
+ 266:main.c        ****     /* Variable to store interrupt state */
+ 267:main.c        ****     uint32 interruptState = 0u;
+ 268:main.c        **** 	
+ 269:main.c        ****     /* Set the current power mode. */
+ 270:main.c        ****     deviceScanMode = FAST_SCAN_MODE;
+ 271:main.c        ****     
+ 272:main.c        ****     /* Enable interrupts. This is required for CapSense and I2C operation */ 
+ 273:main.c        ****     CyGlobalIntEnable;
+ 274:main.c        ****     
+ 275:main.c        ****     /* Start the I2C block and initialize the I2C buffer data */
+ 276:main.c        ****     i2cInit();
+ 277:main.c        ****     
+ 278:main.c        ****     /* Delay CapSense calibration, until the power supply is stable */
+ 279:main.c        ****     CyDelay(100);
+ 280:main.c        ****     
+ 281:main.c        ****     /* Initialize all the CapSense widgets used in the project */
+ 282:main.c        ****     capSenseInit();  
+ 283:main.c        **** 
+ 284:main.c        ****     /* Watchdog is used to control the loop time in this project */
+ 285:main.c        ****     WDT_Start();
+ 286:main.c        ****    
+ 287:main.c        **** 	for(;;)
+ 288:main.c        **** 	{        
+ 289:main.c        **** 		switch(currentState)
+ 290:main.c        **** 		{
+ 291:main.c        ****             case SENSOR_SCAN:
+ 292:main.c        ****                 /* Initiate new scan only if the CapSense hardware is idle */
+ 293:main.c        ****                 if(CapSense_NOT_BUSY == CapSense_IsBusy())
+ 294:main.c        ****                 {
+ 295:main.c        ****                     #if (TUNER_ENABLE)
+ 296:main.c        ****                         /* Update CapSense parameters set via CapSense tuner */
+ 297:main.c        ****                         CapSense_RunTuner();
+ 298:main.c        ****                     #endif
+ 299:main.c        ****                     
+ 300:main.c        ****                     /* If device is in fast scan mode, set the parameters for trackpad or button wi
+ 301:main.c        ****                     if(deviceScanMode == FAST_SCAN_MODE)
+ 302:main.c        ****                     {
+ 303:main.c        ****                         /* Check which widget has to be scanned and configure the parameters for sc
+ 304:main.c        ****                         *  Each of the three widgets (trackpad, and 2 buttons) are scanned one at a
+ 305:main.c        ****                         *  in fast scan mode. The currentWidget variable is used to switch between 
+ 306:main.c        ****                         *  widgets in a round robin fashion and to configure the parameters for sca
+ 307:main.c        ****                         *  Ganged sensor widget is scanned in this state to reset its state to OFF 
+ 308:main.c        ****                         */
+ 309:main.c        ****                         if(currentWidget == CapSense_TRACKPAD_WDGT_ID)
+ 310:main.c        ****                         {
+ 311:main.c        ****                             /* Configure trackpad before scanning */
+ 312:main.c        ****                             CapSense_CSDSetupWidget(CapSense_TRACKPAD_WDGT_ID);
+ 313:main.c        ****                             
+ 314:main.c        ****                             /* Scan LeftClick button after trackpad */
+ 315:main.c        ****                             currentWidget = CapSense_LEFTCLICK_WDGT_ID;
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 7
+
+
+ 316:main.c        ****                         }
+ 317:main.c        ****                         else if(currentWidget == CapSense_LEFTCLICK_WDGT_ID)
+ 318:main.c        ****                         {
+ 319:main.c        ****                             /* Configure LeftClick button widget before scanning */
+ 320:main.c        ****                             CapSense_CSDSetupWidget(CapSense_LEFTCLICK_WDGT_ID);
+ 321:main.c        ****                             
+ 322:main.c        ****                             /* Scan RightClick button after scanning LeftClick */
+ 323:main.c        ****                             currentWidget = CapSense_RIGHTCLICK_WDGT_ID;
+ 324:main.c        ****                         }
+ 325:main.c        ****                         else if (currentWidget == CapSense_RIGHTCLICK_WDGT_ID)
+ 326:main.c        ****                         {
+ 327:main.c        ****                             /* Configure RightClick button widget before scanning */
+ 328:main.c        ****                             CapSense_CSDSetupWidget(CapSense_RIGHTCLICK_WDGT_ID);
+ 329:main.c        ****                             
+ 330:main.c        ****                             /* If gangsensor status is ON and trackpad, buttons are inactive, 
+ 331:main.c        ****                             *  scan ganged sensor until its status is OFF */
+ 332:main.c        ****                             if(CapSense_IsWidgetActive(CapSense_GANGEDSENSOR_WDGT_ID) && (!anyWidge
+ 333:main.c        ****                             {
+ 334:main.c        ****                                 currentWidget = CapSense_GANGEDSENSOR_WDGT_ID;
+ 335:main.c        ****                             }
+ 336:main.c        ****                             /* If gangsensor status is OFF, scan trackpad after RightClick button *
+ 337:main.c        ****                             else
+ 338:main.c        ****                             {
+ 339:main.c        ****                                 /* Scan trackpad after scanning RightClick */
+ 340:main.c        ****                                 currentWidget = CapSense_TRACKPAD_WDGT_ID;
+ 341:main.c        ****                             }
+ 342:main.c        ****                         }
+ 343:main.c        ****                         /* If currentWidget is gangsensor, configure it for scanning */
+ 344:main.c        ****                         else
+ 345:main.c        ****                         {
+ 346:main.c        ****                             /* Configure gangsensor before scanning */
+ 347:main.c        ****                             CapSense_CSDSetupWidget(CapSense_GANGEDSENSOR_WDGT_ID);
+ 348:main.c        ****                             
+ 349:main.c        ****                             /* Scan trackpad after scanning gangsensor */
+ 350:main.c        ****                             currentWidget = CapSense_TRACKPAD_WDGT_ID;
+ 351:main.c        ****                         }
+ 352:main.c        ****                     }
+ 353:main.c        ****                     /* If scan mode is slow scan mode, configure ganged sensor widget for scanning 
+ 354:main.c        ****                     else
+ 355:main.c        ****                     {
+ 356:main.c        ****                         /* Set up ganged sensor for scanning */
+ 357:main.c        ****                         CapSense_CSDSetupWidget(CapSense_GANGEDSENSOR_WDGT_ID);   
+ 358:main.c        ****                     }
+ 359:main.c        ****                     
+ 360:main.c        ****                     /* Scan the widget which was configured in the previous step */
+ 361:main.c        ****                     CapSense_Scan();
+ 362:main.c        ****                     
+ 363:main.c        ****                     /* Set the state machine to wait state until the scan is complete */
+ 364:main.c        ****                     currentState = WAIT_FOR_SCAN_COMPLETE;   
+ 365:main.c        ****                 }
+ 366:main.c        ****             break;
+ 367:main.c        ****                 
+ 368:main.c        ****             case WAIT_FOR_SCAN_COMPLETE:
+ 369:main.c        ****                 /* Device is in sleep state until CapSense scanning is complete or
+ 370:main.c        ****                 *  device is woken-up by either CapSense interrupt or I2C interrupt 
+ 371:main.c        ****                 */
+ 372:main.c        ****                 /* Disable interrupts, so that ISR is not serviced while
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 8
+
+
+ 373:main.c        ****                 *  checking for CapSense scan status. Otherwise, interrupt might
+ 374:main.c        ****                 *  get serviced after checking for IsBusy condition and device
+ 375:main.c        ****                 *  might not wakeup since CapSense interrupt is already serviced
+ 376:main.c        ****                 */
+ 377:main.c        ****                 interruptState = CyEnterCriticalSection();
+ 378:main.c        ****                             
+ 379:main.c        ****                 /* Check if CapSense scanning is complete */
+ 380:main.c        ****                 if(CapSense_NOT_BUSY != CapSense_IsBusy())
+ 381:main.c        ****                 {
+ 382:main.c        ****                     /* If CapSense scanning is in progress, put CPU to sleep */
+ 383:main.c        ****                     CySysPmSleep();
+ 384:main.c        ****                 }
+ 385:main.c        ****                 /* If CapSense scanning is complete, process the CapSense data */
+ 386:main.c        ****                 else
+ 387:main.c        ****                 {
+ 388:main.c        ****                     /* In fast scan mode, keep scanning the widgets until the widget is trackpad */
+ 389:main.c        ****                     if((deviceScanMode == FAST_SCAN_MODE) && (currentWidget != CapSense_TRACKPAD_WD
+ 390:main.c        ****                     {
+ 391:main.c        ****                         currentState = SENSOR_SCAN;
+ 392:main.c        ****                     }
+ 393:main.c        ****                     /* In slow scan mode, process data directly as only gangsensor is scanned 
+ 394:main.c        ****                     *  In fast scan mode, data is processed after all the sensors are scanned
+ 395:main.c        ****                     */
+ 396:main.c        ****                     else
+ 397:main.c        ****                     {
+ 398:main.c        ****                         /* If current widget is trackpad or mode is slow scan mode, process the sen
+ 399:main.c        ****                         currentState = PROCESS_DATA;
+ 400:main.c        ****                     }
+ 401:main.c        ****                 }
+ 402:main.c        ****                 /* Enable interrupts for servicing ISR */
+ 403:main.c        ****                 CyExitCriticalSection(interruptState);
+ 404:main.c        ****             break;
+ 405:main.c        ****             
+ 406:main.c        **** 			case PROCESS_DATA:
+ 407:main.c        ****                 /* Set next state to SLEEP */
+ 408:main.c        ****                 currentState = DEEP_SLEEP;
+ 409:main.c        **** 
+ 410:main.c        ****                 if(deviceScanMode == FAST_SCAN_MODE)
+ 411:main.c        ****                 {
+ 412:main.c        ****                     /* If mode is fast scan mode, process trackpad and button widget data. 
+ 413:main.c        ****                     *  Filters are applied only for ganged sensor.
+ 414:main.c        ****                     *  For trackpad, filters are not applied to get best response time
+ 415:main.c        ****                     */
+ 416:main.c        ****                     CapSense_ProcessWidget(CapSense_TRACKPAD_WDGT_ID);
+ 417:main.c        ****                     CapSense_ProcessWidget(CapSense_LEFTCLICK_WDGT_ID);
+ 418:main.c        ****                     CapSense_ProcessWidget(CapSense_RIGHTCLICK_WDGT_ID);
+ 419:main.c        ****                     
+ 420:main.c        ****                     /* If trackpad and button sensor are inactive and gangsensor status is ON
+ 421:main.c        ****                     *  process the gang sensor data until its status is OFF
+ 422:main.c        ****                     */
+ 423:main.c        ****                     if((!anyWidgetActive()) && CapSense_IsWidgetActive(CapSense_GANGEDSENSOR_WDGT_I
+ 424:main.c        ****                        CapSense_ProcessWidget(CapSense_GANGEDSENSOR_WDGT_ID);
+ 425:main.c        ****                     
+ 426:main.c        ****                     /* Check if trackpad is active */
+ 427:main.c        **** 					fingerStatus =  CapSense_IsWidgetActive(CapSense_TRACKPAD_WDGT_ID);
+ 428:main.c        ****                     
+ 429:main.c        ****                     /* If trackpad is active, obtain XY coordinates */
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 9
+
+
+ 430:main.c        **** 					if(fingerStatus == TRUE)
+ 431:main.c        **** 					{
+ 432:main.c        ****     					tempCoordinates = CapSense_GetXYCoordinates(CapSense_TRACKPAD_WDGT_ID);
+ 433:main.c        ****                         
+ 434:main.c        ****                         /* Extract XY positions separately */
+ 435:main.c        ****     					touchPosition[X_POSITION] = LO16(tempCoordinates);
+ 436:main.c        ****     					touchPosition[Y_POSITION] = HI16 (tempCoordinates);
+ 437:main.c        **** 					}
+ 438:main.c        ****                     /* If trackpad is inactive, set touch position to 0. This will reset all the 
+ 439:main.c        ****                     *  previous history
+ 440:main.c        ****                     */
+ 441:main.c        ****                     else
+ 442:main.c        ****                     {
+ 443:main.c        **** 						touchPosition[X_POSITION] = 0u;
+ 444:main.c        **** 						touchPosition[Y_POSITION] = 0u;
+ 445:main.c        ****                     }
+ 446:main.c        ****                     
+ 447:main.c        ****                     /* Compute deltaX and deltaY touch position */
+ 448:main.c        **** 					mouseDataProcess();	
+ 449:main.c        ****                     
+ 450:main.c        ****                     /* Update the I2C buffer with HID data */
+ 451:main.c        ****                     updateI2cBuffer();
+ 452:main.c        ****                         
+ 453:main.c        ****                     /* If trackpad or button sensor is not active, increment the timeout counter */
+ 454:main.c        ****                     if(!CapSense_IsAnyWidgetActive())
+ 455:main.c        ****                     {
+ 456:main.c        ****                         /* Turn-off LED */
+ 457:main.c        ****                         Red_LED_Write(LED_OFF);
+ 458:main.c        ****                         
+ 459:main.c        ****                         /* Increment timeout counter variable */
+ 460:main.c        ****                         timeoutCounter++;
+ 461:main.c        ****                         
+ 462:main.c        ****                         /* Check if sensor is inactive for a duration greater than SCANMODE_TIMEOUT
+ 463:main.c        ****                         if(timeoutCounter >= SCANMODE_TIMEOUT_VALUE)
+ 464:main.c        ****                         {
+ 465:main.c        ****                             /* Configure refresh interval to slow rate to reduce device power */
+ 466:main.c        ****                             wdtMatchValue = WDT_TIMEOUT_SLOW_SCAN; 
+ 467:main.c        **** 
+ 468:main.c        ****                             /* Set mode to slow scan mode to scan only ganged sensor */
+ 469:main.c        ****                             deviceScanMode = SLOW_SCAN_MODE;
+ 470:main.c        ****                         }
+ 471:main.c        ****                     }  
+ 472:main.c        ****                     /* If either trackpad or button sensors are active, turn-on LED and reset the t
+ 473:main.c        ****                     else
+ 474:main.c        ****                     {
+ 475:main.c        ****                         Red_LED_Write(LED_ON);
+ 476:main.c        ****                         
+ 477:main.c        ****                         /* Because sensor is active, reset the counter */
+ 478:main.c        ****                         timeoutCounter = 0u;
+ 479:main.c        ****                     }
+ 480:main.c        ****                 }
+ 481:main.c        ****                 /* If device is in SLOW_SCAN_MODE, perform the below operations */
+ 482:main.c        ****                 else
+ 483:main.c        ****                 {
+ 484:main.c        ****                     /* Update baseline, sensor status for ganged sensor */
+ 485:main.c        ****                     CapSense_ProcessWidget(CapSense_GANGEDSENSOR_WDGT_ID);
+ 486:main.c        **** 
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 10
+
+
+ 487:main.c        ****                     /* Check ganged sensor status */
+ 488:main.c        ****                     if(CapSense_IsWidgetActive(CapSense_GANGEDSENSOR_WDGT_ID))
+ 489:main.c        ****                     {
+ 490:main.c        ****                         /* Set watchdog match value to fast scan mode */
+ 491:main.c        ****                         wdtMatchValue = WDT_TIMEOUT_FAST_SCAN;         
+ 492:main.c        **** 
+ 493:main.c        ****                         /* Reset counter */
+ 494:main.c        ****                         timeoutCounter = SW_TIMER_RESET;
+ 495:main.c        **** 
+ 496:main.c        ****                         /* Change the device mode to fast because touch is detected on gang sensor 
+ 497:main.c        ****                         deviceScanMode = FAST_SCAN_MODE; 
+ 498:main.c        **** 
+ 499:main.c        ****                         /* Scan trackpad widget first */
+ 500:main.c        ****                         currentWidget = CapSense_TRACKPAD_WDGT_ID;
+ 501:main.c        **** 
+ 502:main.c        ****                         /* Skip sleep state and set next state to sensor scan */
+ 503:main.c        ****                         currentState = SENSOR_SCAN;
+ 504:main.c        ****                     }
+ 505:main.c        ****                 }
+ 506:main.c        ****             break;
+ 507:main.c        **** 
+ 508:main.c        **** 			case DEEP_SLEEP:
+ 509:main.c        ****                 
+ 510:main.c        ****                 /* Enter deep sleep after CapSense scan is completed */
+ 511:main.c        **** 			    enterDeepSleepLowPowerMode();
+ 512:main.c        ****                 
+ 513:main.c        ****                 /* Start scanning the sensors only if interrupt occurred due to WDT.
+ 514:main.c        ****                 *  Interrupt can also occur due to I2C interrupt either when tuner is running
+ 515:main.c        ****                 *  or when PSoC 5LP is reading HID data from slave device.
+ 516:main.c        ****                 *  In such cases, sensor is not scanned until WDT interrupt has occurred
+ 517:main.c        ****                 */
+ 518:main.c        ****                 if(wdtInterruptOccured)
+ 519:main.c        ****                 {                    
+ 520:main.c        ****                     /* Set state to scan sensor after device wakes up from sleep */
+ 521:main.c        ****                     currentState = SENSOR_SCAN;
+ 522:main.c        ****                     
+ 523:main.c        ****                     wdtInterruptOccured = FALSE;  
+ 524:main.c        ****                     
+ 525:main.c        ****                     /* Calibrate the ILO to ensure accurate scan intervals */
+ 526:main.c        ****                     CalibrateWdtMatchValue();
+ 527:main.c        ****                 }
+ 528:main.c        **** 		        break;	
+ 529:main.c        ****             default:
+ 530:main.c        ****             /*******************************************************************
+ 531:main.c        ****              * Unknown power mode state. Unexpected situation.
+ 532:main.c        ****              ******************************************************************/
+ 533:main.c        ****             CYASSERT(0);
+ 534:main.c        ****             break;
+ 535:main.c        ****         }
+ 536:main.c        **** 	}      
+ 537:main.c        **** }
+ 538:main.c        **** 
+ 539:main.c        **** /******************************************************************************
+ 540:main.c        **** * Function Name: capSenseInit
+ 541:main.c        **** *******************************************************************************
+ 542:main.c        **** *
+ 543:main.c        **** * Summary: This API initializes CapSense block
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 11
+
+
+ 544:main.c        **** 
+ 545:main.c        **** *
+ 546:main.c        **** * Parameters:
+ 547:main.c        **** *  None.
+ 548:main.c        **** *
+ 549:main.c        **** * Return:
+ 550:main.c        **** *  None.
+ 551:main.c        **** *
+ 552:main.c        **** * Theory:
+ 553:main.c        **** *   capSenseInit() performs following functions:
+ 554:main.c        **** *  1: Starts the CapSense block
+ 555:main.c        **** *  2: Scan the trackpad widget and initialize the previous touch coordinate values
+ 556:main.c        **** * 
+ 557:main.c        **** * Side Effects: None
+ 558:main.c        **** *
+ 559:main.c        **** * Note: None
+ 560:main.c        **** *
+ 561:main.c        **** *******************************************************************************/
+ 562:main.c        **** void capSenseInit(void)
+ 563:main.c        **** {
+ 564:main.c        ****     /* Temporary variable to store trackpad coordinates */
+ 565:main.c        ****     uint32 tempCoordinates;
+ 566:main.c        **** 
+ 567:main.c        ****     /* Starts the CapSense block and performs baseline initialization */
+ 568:main.c        ****     CapSense_Start();
+ 569:main.c        ****     
+ 570:main.c        ****     /* Set the default finger presence status and touch coordinates */
+ 571:main.c        ****     fingerStatus =  0x0u;
+ 572:main.c        ****     tempCoordinates = 0xFFFFu;
+ 573:main.c        ****     
+ 574:main.c        ****     /* Get the touch position */
+ 575:main.c        ****     touchPosition[X_POSITION] = LO16(tempCoordinates);
+ 576:main.c        ****     touchPosition[Y_POSITION] = HI16 (tempCoordinates);
+ 577:main.c        ****     
+ 578:main.c        ****     /* Initialize the previous touch position */
+ 579:main.c        ****     prevTouchPosition[X_POSITION] = touchPosition[X_POSITION];
+ 580:main.c        ****     prevTouchPosition[Y_POSITION] = touchPosition[Y_POSITION];
+ 581:main.c        **** }
+ 582:main.c        **** 
+ 583:main.c        **** /******************************************************************************
+ 584:main.c        **** * Function Name: mouseDataProcess
+ 585:main.c        **** *******************************************************************************
+ 586:main.c        **** *
+ 587:main.c        **** * Summary:
+ 588:main.c        **** *  This API processes the rawdata from the CapSense block and prepares the data
+ 589:main.c        **** *  to be sent over I2C to host
+ 590:main.c        **** *
+ 591:main.c        **** * Parameters:
+ 592:main.c        **** *  None.
+ 593:main.c        **** *
+ 594:main.c        **** * Return:
+ 595:main.c        **** *  None.
+ 596:main.c        **** *
+ 597:main.c        **** * Theory: This API computes the deltaX and deltaY position for trackpad. It also checks 
+ 598:main.c        **** *         the falling edge on the leftClick and rightClick buttons.
+ 599:main.c        **** *
+ 600:main.c        **** * Side Effects: None
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 12
+
+
+ 601:main.c        **** *
+ 602:main.c        **** * Note: None
+ 603:main.c        **** *
+ 604:main.c        **** *******************************************************************************/
+ 605:main.c        **** 
+ 606:main.c        **** void mouseDataProcess(void)
+ 607:main.c        **** {
+ 608:main.c        ****     /* Variable to detect raising edge of left button status */
+ 609:main.c        ****     static uint8 prevLeftClick = 0u;
+ 610:main.c        ****     uint8 currentLeftClick = 0u;
+ 611:main.c        ****     
+ 612:main.c        ****     /* Variable to detect raising edge of right button status */
+ 613:main.c        ****     static uint8 prevRightClick = 0u;
+ 614:main.c        ****     uint8 currentRightClick = 0u;
+ 615:main.c        ****     
+ 616:main.c        ****     /* Variable to detect rising edge/falling edge of trackpad status */
+ 617:main.c        ****     static uint8 prevfingerStatus = 0u;
+ 618:main.c        ****     uint8 currentfingerStatus = 0u;
+ 619:main.c        ****             
+ 620:main.c        ****     /* Initialize the sign indication variable to '0' */
+ 621:main.c        ****     xyDirectionData = 0u;
+ 622:main.c        ****     
+ 623:main.c        ****     /* If trackpad is active, perform delta position computation */
+ 624:main.c        **** 	currentfingerStatus =  CapSense_IsWidgetActive(CapSense_TRACKPAD_WDGT_ID);
+ 625:main.c        ****     
+ 626:main.c        ****     /* Compute delta positions only when the finger is placed on the trackpad
+ 627:main.c        ****     *  Delta position is not computed when there is a touchdown or liftoff condition is detected
+ 628:main.c        ****     */
+ 629:main.c        ****     if((currentfingerStatus && prevfingerStatus))
+ 630:main.c        ****     {
+ 631:main.c        ****         /* Get the DeltaX and DeltaY coordinates and sign information */
+ 632:main.c        ****         if(prevTouchPosition[X_POSITION] > touchPosition[X_POSITION])
+ 633:main.c        ****         {
+ 634:main.c        ****             diffPosition[X_POSITION] = prevTouchPosition[X_POSITION] - touchPosition[X_POSITION];
+ 635:main.c        ****             xyDirectionData = xyDirectionData | X_POSITION_NEGATIVE;
+ 636:main.c        ****         }
+ 637:main.c        ****         /* If previous X position is less than current X position */
+ 638:main.c        ****         else
+ 639:main.c        ****         {
+ 640:main.c        ****             diffPosition[X_POSITION] = touchPosition[X_POSITION] - prevTouchPosition[X_POSITION];
+ 641:main.c        ****         }
+ 642:main.c        ****         
+ 643:main.c        ****         if(prevTouchPosition[Y_POSITION] > touchPosition[Y_POSITION])
+ 644:main.c        ****         {
+ 645:main.c        ****             diffPosition[Y_POSITION] = prevTouchPosition[Y_POSITION] - touchPosition[Y_POSITION];
+ 646:main.c        ****         }
+ 647:main.c        ****         /* If previous Y position is less than current Y position */
+ 648:main.c        ****         else
+ 649:main.c        ****         {
+ 650:main.c        ****             diffPosition[Y_POSITION] = touchPosition[Y_POSITION] - prevTouchPosition[Y_POSITION];
+ 651:main.c        ****             xyDirectionData = xyDirectionData | Y_POSITION_NEGATIVE;
+ 652:main.c        ****         }
+ 653:main.c        ****     }
+ 654:main.c        ****     /* If either trackpad is not active, or a touchdown or liftoff condition is detected
+ 655:main.c        ****     *  delta position is initialized to 0.
+ 656:main.c        ****     */
+ 657:main.c        ****     else
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 13
+
+
+ 658:main.c        ****     {
+ 659:main.c        ****         diffPosition[X_POSITION] = 0u;
+ 660:main.c        ****         diffPosition[Y_POSITION] = 0u;
+ 661:main.c        ****     }
+ 662:main.c        ****     
+ 663:main.c        ****     /* If delta position is greater than the threshold limit, scale the 
+ 664:main.c        ****     *  delta position by a factor of 2.
+ 665:main.c        ****     */
+ 666:main.c        ****     if(diffPosition[X_POSITION] > DELTA_POS_MULT_THRESHOLD)
+ 667:main.c        ****         diffPosition[X_POSITION] = diffPosition[X_POSITION] << 1u;
+ 668:main.c        ****     
+ 669:main.c        ****     if(diffPosition[Y_POSITION] > DELTA_POS_MULT_THRESHOLD)
+ 670:main.c        ****         diffPosition[Y_POSITION] = diffPosition[Y_POSITION] << 1u;
+ 671:main.c        **** 
+ 672:main.c        ****     /* Update previous touch position variables once delta position is computed */
+ 673:main.c        ****     prevTouchPosition[X_POSITION] = touchPosition[X_POSITION];
+ 674:main.c        ****     prevTouchPosition[Y_POSITION] = touchPosition[Y_POSITION];
+ 675:main.c        ****     
+ 676:main.c        ****     /* Get the current button status */
+ 677:main.c        ****     currentLeftClick = CapSense_IsWidgetActive(CapSense_LEFTCLICK_WDGT_ID);
+ 678:main.c        ****     currentRightClick = CapSense_IsWidgetActive(CapSense_RIGHTCLICK_WDGT_ID);
+ 679:main.c        ****     
+ 680:main.c        ****     /* Get the mouse left click and right click data */
+ 681:main.c        ****     mouseClickData = 0;
+ 682:main.c        ****     
+ 683:main.c        ****     /* Send left click only on the raising edge of left-click button status */
+ 684:main.c        ****     if((prevLeftClick == 0) && (currentLeftClick !=0))
+ 685:main.c        ****     {
+ 686:main.c        ****         mouseClickData |= MOUSE_FN_LEFT_CLICK; 
+ 687:main.c        ****     }
+ 688:main.c        ****     else
+ 689:main.c        ****     {
+ 690:main.c        ****         mouseClickData &= ~(MOUSE_FN_LEFT_CLICK); 
+ 691:main.c        ****     }
+ 692:main.c        ****     
+ 693:main.c        ****     /* Send right click only on the raising edge of right-click button status */
+ 694:main.c        ****     if((prevRightClick == 0) && (currentRightClick !=0))
+ 695:main.c        ****     {
+ 696:main.c        ****         mouseClickData |= MOUSE_FN_RIGHT_CLICK; 
+ 697:main.c        ****     }
+ 698:main.c        ****     else
+ 699:main.c        ****     {
+ 700:main.c        ****         mouseClickData &= ~(MOUSE_FN_RIGHT_CLICK); 
+ 701:main.c        ****     }
+ 702:main.c        ****     
+ 703:main.c        ****     /* Update previous trackpad and button status */
+ 704:main.c        ****     prevfingerStatus = currentfingerStatus;
+ 705:main.c        ****     prevLeftClick = currentLeftClick;
+ 706:main.c        ****     prevRightClick = currentRightClick;
+ 707:main.c        **** }
+ 708:main.c        **** 
+ 709:main.c        **** /******************************************************************************
+ 710:main.c        **** * Function Name: i2cInit
+ 711:main.c        **** *******************************************************************************
+ 712:main.c        **** *
+ 713:main.c        **** * Summary:
+ 714:main.c        **** *  This function starts the I2C block and assigns the I2C buffer that is exposed to the master
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 14
+
+
+ 715:main.c        **** *  If tuner communication is enabled, the I2C buffer will be the CapSense data structure
+ 716:main.c        **** *  If tuner communication is disabled, the I2C buffer will be the HID data structure
+ 717:main.c        **** *
+ 718:main.c        **** * Parameters:
+ 719:main.c        **** *  None.
+ 720:main.c        **** *
+ 721:main.c        **** * Return:
+ 722:main.c        **** *  None.
+ 723:main.c        **** *
+ 724:main.c        **** * Theory: DUT index and HID type are one time updates and hence they are 
+ 725:main.c        **** *         updated on power up.
+ 726:main.c        **** *
+ 727:main.c        **** * Side Effects: None
+ 728:main.c        **** *
+ 729:main.c        **** * Note: None
+ 730:main.c        **** *
+ 731:main.c        **** *******************************************************************************/
+ 732:main.c        **** void i2cInit(void)
+ 733:main.c        **** {
+ 734:main.c        ****     /* Configure the SCB clock for EZI2C operation */
+ 735:main.c        ****     EZI2C_Start();
+ 736:main.c        ****     
+ 737:main.c        ****     /* If tuner is enabled, expose CapSense data structure to I2C master */
+ 738:main.c        ****     #if (TUNER_ENABLE)
+ 739:main.c        ****         EZI2C_EzI2CSetBuffer1(sizeof(CapSense_dsRam), sizeof(CapSense_dsRam),\
+ 740:main.c        ****                          (uint8 *)&CapSense_dsRam);
+ 741:main.c        ****     #else
+ 742:main.c        ****         /* Fill in the buffer with default values */
+ 743:main.c        ****         ezI2cBuffer[DUT_ID_INDEX] = DUT_ID_CHECK;
+ 744:main.c        ****         
+ 745:main.c        ****         /* Trackpad acts as a HID mouse in this example */
+ 746:main.c        ****         ezI2cBuffer[HID_TYPE_INDEX] = MOUSE_FUNCTION;
+ 747:main.c        ****         
+ 748:main.c        ****         /* Setup I2C buffer */
+ 749:main.c        ****         EZI2C_EzI2CSetBuffer1(BUFFER_SIZE, READ_ONLY_OFFSET, ezI2cBuffer);
+ 750:main.c        ****     #endif
+ 751:main.c        **** }
+ 752:main.c        **** 
+ 753:main.c        **** /******************************************************************************
+ 754:main.c        **** * Function Name: updateI2cBuffer
+ 755:main.c        **** *******************************************************************************
+ 756:main.c        **** *
+ 757:main.c        **** * Summary:
+ 758:main.c        **** *  This API updates the I2C buffer with the HID related data
+ 759:main.c        **** *
+ 760:main.c        **** * Parameters:
+ 761:main.c        **** *  None.
+ 762:main.c        **** *
+ 763:main.c        **** * Return:
+ 764:main.c        **** *  None.
+ 765:main.c        **** *
+ 766:main.c        **** * Theory: This API updates the buffer with trackpad and button sensor status. 
+ 767:main.c        **** *         Once the host reads the data, the entire buffer is cleared.
+ 768:main.c        **** *
+ 769:main.c        **** * Side Effects: None
+ 770:main.c        **** *
+ 771:main.c        **** * Note: None
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 15
+
+
+ 772:main.c        **** *
+ 773:main.c        **** *******************************************************************************/
+ 774:main.c        **** void updateI2cBuffer(void)
+ 775:main.c        **** {
+ 776:main.c        ****     uint16 checksum = 0u;
+ 777:main.c        ****     uint8 index;
+ 778:main.c        ****     static uint8 resetDone = 0u;
+ 779:main.c        ****     
+ 780:main.c        ****     /* If either trackpad or button sensor is touched, update the I2C buffer */
+ 781:main.c        ****     if(fingerStatus || mouseClickData)
+ 782:main.c        ****     {
+ 783:main.c        ****         /* Set the data valid byte to invalid before updating the buffer */
+ 784:main.c        ****         ezI2cBuffer[HID_DATA_VALID_INDEX] = HID_DATA_INVALID;
+ 785:main.c        ****                 
+ 786:main.c        ****         /* Reset all the data */
+ 787:main.c        ****         for(index = DATA_BYTE1_INDEX; index <= DATA_BYTE5_INDEX;index++)
+ 788:main.c        ****         {
+ 789:main.c        ****             ezI2cBuffer[index] = 0u;
+ 790:main.c        ****         }
+ 791:main.c        **** 
+ 792:main.c        ****         /* 5 bytes of data is sent to host 
+ 793:main.c        ****         BYTE1 - Mouse click data
+ 794:main.c        ****         BYTE2 - Delta x data
+ 795:main.c        ****         BYTE3 - Delta y data
+ 796:main.c        ****         BYTE4 - 0 (Scroll data, not used in this code example)
+ 797:main.c        ****         BYTE5 - delta x and delta y sign information
+ 798:main.c        ****         */
+ 799:main.c        ****         ezI2cBuffer[BYTES_IN_BUFFER_INDEX] = MOUSE_DATA_BYTES_COUNT;
+ 800:main.c        ****         
+ 801:main.c        ****         ezI2cBuffer[DATA_BYTE1_INDEX] = mouseClickData;
+ 802:main.c        ****         ezI2cBuffer[DATA_BYTE2_INDEX] = diffPosition[Y_POSITION];
+ 803:main.c        ****         ezI2cBuffer[DATA_BYTE3_INDEX] = diffPosition[X_POSITION];
+ 804:main.c        ****         ezI2cBuffer[DATA_BYTE4_INDEX] = 0u;
+ 805:main.c        ****         ezI2cBuffer[DATA_BYTE5_INDEX] = xyDirectionData;
+ 806:main.c        **** 
+ 807:main.c        ****         /* Compute the checksum, sum of all register data
+ 808:main.c        ****            Checksum is set to 1 because data valid byte is set to '0'
+ 809:main.c        ****            and once checksum is computed and updated to buffer the data
+ 810:main.c        ****            valid byte will be set to '1'
+ 811:main.c        ****         */
+ 812:main.c        ****         checksum = 1u;         
+ 813:main.c        ****                     
+ 814:main.c        ****         for(index=0; index < (BUFFER_SIZE- CHECKSUM_BYTES); index++)
+ 815:main.c        ****         {
+ 816:main.c        ****             checksum += ezI2cBuffer[index];        
+ 817:main.c        ****         }
+ 818:main.c        ****         
+ 819:main.c        ****         /* Store checksum */
+ 820:main.c        ****         ezI2cBuffer[CHECKSUM_MSB_INDEX] = HI8(checksum);
+ 821:main.c        ****         ezI2cBuffer[CHECKSUM_LSB_INDEX] = LO8(checksum);
+ 822:main.c        ****         
+ 823:main.c        ****         /* Set HID_DATA_VALID_INDEX to '1' to indicate buffer is updated */
+ 824:main.c        ****         ezI2cBuffer[HID_DATA_VALID_INDEX] = HID_DATA_VALID;
+ 825:main.c        ****         
+ 826:main.c        ****         /* Set variable to indicate that buffer data is not reset */
+ 827:main.c        ****         resetDone = 0;
+ 828:main.c        ****     }
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 16
+
+
+ 829:main.c        ****     
+ 830:main.c        ****     /* If host has read the data and reset the HID_DATA_VALID_INDEX byte, reset all the data */
+ 831:main.c        ****     if(ezI2cBuffer[HID_DATA_VALID_INDEX] == HID_DATA_INVALID)
+ 832:main.c        ****     {
+ 833:main.c        ****         /* Check if reset is already done */
+ 834:main.c        ****         if(resetDone == 0)
+ 835:main.c        ****         {
+ 836:main.c        ****             /* Initialize all the buffer data bytes to zero */
+ 837:main.c        ****             for(index = DATA_BYTE1_INDEX; index <= DATA_BYTE5_INDEX; index++)
+ 838:main.c        ****             {
+ 839:main.c        ****                 ezI2cBuffer[index] = 0;
+ 840:main.c        ****             }
+ 841:main.c        ****             
+ 842:main.c        ****             /* Set variable to indicate that reset is done */
+ 843:main.c        ****             resetDone = 1u;
+ 844:main.c        ****         }
+ 845:main.c        ****     }    
+ 846:main.c        **** }
+ 847:main.c        **** 
+ 848:main.c        **** /******************************************************************************
+ 849:main.c        **** * Function Name: Timer_Interrupt
+ 850:main.c        **** *******************************************************************************
+ 851:main.c        **** *
+ 852:main.c        **** * Summary:
+ 853:main.c        **** *  Handles the Interrupt Service Routine for the WDT timer.
+ 854:main.c        **** *
+ 855:main.c        **** * Parameters:
+ 856:main.c        **** *  None.
+ 857:main.c        **** *
+ 858:main.c        **** * Return:
+ 859:main.c        **** *  None.
+ 860:main.c        **** *
+ 861:main.c        **** * Theory: The interrupt is cleared on the ISR as watchdog in this project is 
+ 862:main.c        **** *         used for timing maintenance only. Match value is updated to maintain 
+ 863:main.c        **** *         the loop time. 
+ 864:main.c        **** *
+ 865:main.c        **** * Side Effects: None
+ 866:main.c        **** *
+ 867:main.c        **** * Note: None
+ 868:main.c        **** *
+ 869:main.c        **** *******************************************************************************/
+ 870:main.c        **** 
+ 871:main.c        **** CY_ISR(Timer_Interrupt)
+ 872:main.c        **** {
+  28              		.loc 1 872 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32 0000 10B5     		push	{r4, lr}
+  33              		.cfi_def_cfa_offset 8
+  34              		.cfi_offset 4, -8
+  35              		.cfi_offset 14, -4
+ 873:main.c        ****     /* Clear the watchdog interrupt */
+ 874:main.c        ****     CySysWdtClearInterrupt();  
+  36              		.loc 1 874 0
+  37 0002 FFF7FEFF 		bl	CySysWdtClearInterrupt
+  38              	.LVL0:
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 17
+
+
+ 875:main.c        ****     
+ 876:main.c        ****     /* Update the watchdog match value */
+ 877:main.c        ****     CySysWdtWriteMatch(CySysWdtReadMatch() + wdtMatchValue);
+  39              		.loc 1 877 0
+  40 0006 FFF7FEFF 		bl	CySysWdtGetMatch
+  41              	.LVL1:
+  42 000a 044B     		ldr	r3, .L2
+  43 000c 1B68     		ldr	r3, [r3]
+  44 000e C018     		adds	r0, r0, r3
+  45 0010 FFF7FEFF 		bl	CySysWdtSetMatch
+  46              	.LVL2:
+ 878:main.c        ****     
+ 879:main.c        ****     /* Set flag to true to indicate main loop that interrupt is because of WDT */
+ 880:main.c        ****     wdtInterruptOccured = TRUE;
+  47              		.loc 1 880 0
+  48 0014 0122     		movs	r2, #1
+  49 0016 024B     		ldr	r3, .L2+4
+  50 0018 1A70     		strb	r2, [r3]
+ 881:main.c        **** }
+  51              		.loc 1 881 0
+  52              		@ sp needed
+  53 001a 10BD     		pop	{r4, pc}
+  54              	.L3:
+  55              		.align	2
+  56              	.L2:
+  57 001c 00000000 		.word	.LANCHOR0
+  58 0020 00000000 		.word	.LANCHOR1
+  59              		.cfi_endproc
+  60              	.LFE38:
+  61              		.size	Timer_Interrupt, .-Timer_Interrupt
+  62              		.section	.text.capSenseInit,"ax",%progbits
+  63              		.align	2
+  64              		.global	capSenseInit
+  65              		.code	16
+  66              		.thumb_func
+  67              		.type	capSenseInit, %function
+  68              	capSenseInit:
+  69              	.LFB34:
+ 563:main.c        ****     /* Temporary variable to store trackpad coordinates */
+  70              		.loc 1 563 0
+  71              		.cfi_startproc
+  72              		@ args = 0, pretend = 0, frame = 0
+  73              		@ frame_needed = 0, uses_anonymous_args = 0
+  74 0000 10B5     		push	{r4, lr}
+  75              		.cfi_def_cfa_offset 8
+  76              		.cfi_offset 4, -8
+  77              		.cfi_offset 14, -4
+ 568:main.c        ****     
+  78              		.loc 1 568 0
+  79 0002 FFF7FEFF 		bl	CapSense_Start
+  80              	.LVL3:
+ 571:main.c        ****     tempCoordinates = 0xFFFFu;
+  81              		.loc 1 571 0
+  82 0006 0023     		movs	r3, #0
+  83 0008 054A     		ldr	r2, .L5
+  84 000a 1380     		strh	r3, [r2]
+  85              	.LVL4:
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 18
+
+
+ 575:main.c        ****     touchPosition[Y_POSITION] = HI16 (tempCoordinates);
+  86              		.loc 1 575 0
+  87 000c 054A     		ldr	r2, .L5+4
+  88 000e 0121     		movs	r1, #1
+  89 0010 4942     		rsbs	r1, r1, #0
+  90 0012 1180     		strh	r1, [r2]
+ 576:main.c        ****     
+  91              		.loc 1 576 0
+  92 0014 5380     		strh	r3, [r2, #2]
+ 579:main.c        ****     prevTouchPosition[Y_POSITION] = touchPosition[Y_POSITION];
+  93              		.loc 1 579 0
+  94 0016 044A     		ldr	r2, .L5+8
+  95 0018 1180     		strh	r1, [r2]
+ 580:main.c        **** }
+  96              		.loc 1 580 0
+  97 001a 5380     		strh	r3, [r2, #2]
+ 581:main.c        **** 
+  98              		.loc 1 581 0
+  99              		@ sp needed
+ 100 001c 10BD     		pop	{r4, pc}
+ 101              	.L6:
+ 102 001e C046     		.align	2
+ 103              	.L5:
+ 104 0020 00000000 		.word	fingerStatus
+ 105 0024 00000000 		.word	touchPosition
+ 106 0028 00000000 		.word	prevTouchPosition
+ 107              		.cfi_endproc
+ 108              	.LFE34:
+ 109              		.size	capSenseInit, .-capSenseInit
+ 110              		.section	.text.mouseDataProcess,"ax",%progbits
+ 111              		.align	2
+ 112              		.global	mouseDataProcess
+ 113              		.code	16
+ 114              		.thumb_func
+ 115              		.type	mouseDataProcess, %function
+ 116              	mouseDataProcess:
+ 117              	.LFB35:
+ 607:main.c        ****     /* Variable to detect raising edge of left button status */
+ 118              		.loc 1 607 0
+ 119              		.cfi_startproc
+ 120              		@ args = 0, pretend = 0, frame = 0
+ 121              		@ frame_needed = 0, uses_anonymous_args = 0
+ 122 0000 70B5     		push	{r4, r5, r6, lr}
+ 123              		.cfi_def_cfa_offset 16
+ 124              		.cfi_offset 4, -16
+ 125              		.cfi_offset 5, -12
+ 126              		.cfi_offset 6, -8
+ 127              		.cfi_offset 14, -4
+ 128              	.LVL5:
+ 621:main.c        ****     
+ 129              		.loc 1 621 0
+ 130 0002 0022     		movs	r2, #0
+ 131 0004 394B     		ldr	r3, .L18
+ 132 0006 1A70     		strb	r2, [r3]
+ 624:main.c        ****     
+ 133              		.loc 1 624 0
+ 134 0008 0020     		movs	r0, #0
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 19
+
+
+ 135 000a FFF7FEFF 		bl	CapSense_IsWidgetActive
+ 136              	.LVL6:
+ 137 000e C4B2     		uxtb	r4, r0
+ 138              	.LVL7:
+ 629:main.c        ****     {
+ 139              		.loc 1 629 0
+ 140 0010 002C     		cmp	r4, #0
+ 141 0012 28D0     		beq	.L8
+ 629:main.c        ****     {
+ 142              		.loc 1 629 0 is_stmt 0 discriminator 1
+ 143 0014 364B     		ldr	r3, .L18+4
+ 144 0016 5B78     		ldrb	r3, [r3, #1]
+ 145 0018 002B     		cmp	r3, #0
+ 146 001a 24D0     		beq	.L8
+ 632:main.c        ****         {
+ 147              		.loc 1 632 0 is_stmt 1
+ 148 001c 354B     		ldr	r3, .L18+8
+ 149 001e 1A88     		ldrh	r2, [r3]
+ 150 0020 354B     		ldr	r3, .L18+12
+ 151 0022 1B88     		ldrh	r3, [r3]
+ 152 0024 9A42     		cmp	r2, r3
+ 153 0026 08D9     		bls	.L9
+ 634:main.c        ****             xyDirectionData = xyDirectionData | X_POSITION_NEGATIVE;
+ 154              		.loc 1 634 0
+ 155 0028 D31A     		subs	r3, r2, r3
+ 156 002a 344A     		ldr	r2, .L18+16
+ 157 002c 1380     		strh	r3, [r2]
+ 635:main.c        ****         }
+ 158              		.loc 1 635 0
+ 159 002e 2F4A     		ldr	r2, .L18
+ 160 0030 1178     		ldrb	r1, [r2]
+ 161 0032 0223     		movs	r3, #2
+ 162 0034 0B43     		orrs	r3, r1
+ 163 0036 1370     		strb	r3, [r2]
+ 164 0038 02E0     		b	.L10
+ 165              	.L9:
+ 640:main.c        ****         }
+ 166              		.loc 1 640 0
+ 167 003a 9B1A     		subs	r3, r3, r2
+ 168 003c 2F4A     		ldr	r2, .L18+16
+ 169 003e 1380     		strh	r3, [r2]
+ 170              	.L10:
+ 643:main.c        ****         {
+ 171              		.loc 1 643 0
+ 172 0040 2C4B     		ldr	r3, .L18+8
+ 173 0042 5A88     		ldrh	r2, [r3, #2]
+ 174 0044 2C4B     		ldr	r3, .L18+12
+ 175 0046 5B88     		ldrh	r3, [r3, #2]
+ 176 0048 9A42     		cmp	r2, r3
+ 177 004a 03D9     		bls	.L11
+ 645:main.c        ****         }
+ 178              		.loc 1 645 0
+ 179 004c D31A     		subs	r3, r2, r3
+ 180 004e 2B4A     		ldr	r2, .L18+16
+ 181 0050 5380     		strh	r3, [r2, #2]
+ 182 0052 0CE0     		b	.L12
+ 183              	.L11:
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 20
+
+
+ 650:main.c        ****             xyDirectionData = xyDirectionData | Y_POSITION_NEGATIVE;
+ 184              		.loc 1 650 0
+ 185 0054 9B1A     		subs	r3, r3, r2
+ 186 0056 294A     		ldr	r2, .L18+16
+ 187 0058 5380     		strh	r3, [r2, #2]
+ 651:main.c        ****         }
+ 188              		.loc 1 651 0
+ 189 005a 244A     		ldr	r2, .L18
+ 190 005c 1178     		ldrb	r1, [r2]
+ 191 005e 0123     		movs	r3, #1
+ 192 0060 0B43     		orrs	r3, r1
+ 193 0062 1370     		strb	r3, [r2]
+ 194 0064 03E0     		b	.L12
+ 195              	.L8:
+ 659:main.c        ****         diffPosition[Y_POSITION] = 0u;
+ 196              		.loc 1 659 0
+ 197 0066 254B     		ldr	r3, .L18+16
+ 198 0068 0022     		movs	r2, #0
+ 199 006a 1A80     		strh	r2, [r3]
+ 660:main.c        ****     }
+ 200              		.loc 1 660 0
+ 201 006c 5A80     		strh	r2, [r3, #2]
+ 202              	.L12:
+ 666:main.c        ****         diffPosition[X_POSITION] = diffPosition[X_POSITION] << 1u;
+ 203              		.loc 1 666 0
+ 204 006e 234B     		ldr	r3, .L18+16
+ 205 0070 1B88     		ldrh	r3, [r3]
+ 206 0072 0A2B     		cmp	r3, #10
+ 207 0074 02D9     		bls	.L13
+ 667:main.c        ****     
+ 208              		.loc 1 667 0
+ 209 0076 5B00     		lsls	r3, r3, #1
+ 210 0078 204A     		ldr	r2, .L18+16
+ 211 007a 1380     		strh	r3, [r2]
+ 212              	.L13:
+ 669:main.c        ****         diffPosition[Y_POSITION] = diffPosition[Y_POSITION] << 1u;
+ 213              		.loc 1 669 0
+ 214 007c 1F4B     		ldr	r3, .L18+16
+ 215 007e 5B88     		ldrh	r3, [r3, #2]
+ 216 0080 0A2B     		cmp	r3, #10
+ 217 0082 02D9     		bls	.L14
+ 670:main.c        **** 
+ 218              		.loc 1 670 0
+ 219 0084 5B00     		lsls	r3, r3, #1
+ 220 0086 1D4A     		ldr	r2, .L18+16
+ 221 0088 5380     		strh	r3, [r2, #2]
+ 222              	.L14:
+ 673:main.c        ****     prevTouchPosition[Y_POSITION] = touchPosition[Y_POSITION];
+ 223              		.loc 1 673 0
+ 224 008a 1B4A     		ldr	r2, .L18+12
+ 225 008c 1188     		ldrh	r1, [r2]
+ 226 008e 194B     		ldr	r3, .L18+8
+ 227 0090 1980     		strh	r1, [r3]
+ 674:main.c        ****     
+ 228              		.loc 1 674 0
+ 229 0092 5288     		ldrh	r2, [r2, #2]
+ 230 0094 5A80     		strh	r2, [r3, #2]
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 21
+
+
+ 677:main.c        ****     currentRightClick = CapSense_IsWidgetActive(CapSense_RIGHTCLICK_WDGT_ID);
+ 231              		.loc 1 677 0
+ 232 0096 0120     		movs	r0, #1
+ 233 0098 FFF7FEFF 		bl	CapSense_IsWidgetActive
+ 234              	.LVL8:
+ 235 009c C5B2     		uxtb	r5, r0
+ 236              	.LVL9:
+ 678:main.c        ****     
+ 237              		.loc 1 678 0
+ 238 009e 0220     		movs	r0, #2
+ 239 00a0 FFF7FEFF 		bl	CapSense_IsWidgetActive
+ 240              	.LVL10:
+ 241 00a4 C0B2     		uxtb	r0, r0
+ 242              	.LVL11:
+ 681:main.c        ****     
+ 243              		.loc 1 681 0
+ 244 00a6 0022     		movs	r2, #0
+ 245 00a8 154B     		ldr	r3, .L18+20
+ 246 00aa 1A70     		strb	r2, [r3]
+ 684:main.c        ****     {
+ 247              		.loc 1 684 0
+ 248 00ac 104B     		ldr	r3, .L18+4
+ 249 00ae 9B78     		ldrb	r3, [r3, #2]
+ 250 00b0 002B     		cmp	r3, #0
+ 251 00b2 04D1     		bne	.L15
+ 684:main.c        ****     {
+ 252              		.loc 1 684 0 is_stmt 0 discriminator 1
+ 253 00b4 002D     		cmp	r5, #0
+ 254 00b6 02D0     		beq	.L15
+ 686:main.c        ****     }
+ 255              		.loc 1 686 0 is_stmt 1
+ 256 00b8 0132     		adds	r2, r2, #1
+ 257 00ba 114B     		ldr	r3, .L18+20
+ 258 00bc 1A70     		strb	r2, [r3]
+ 259              	.L15:
+ 694:main.c        ****     {
+ 260              		.loc 1 694 0
+ 261 00be 0C4B     		ldr	r3, .L18+4
+ 262 00c0 DB78     		ldrb	r3, [r3, #3]
+ 263 00c2 002B     		cmp	r3, #0
+ 264 00c4 07D1     		bne	.L16
+ 694:main.c        ****     {
+ 265              		.loc 1 694 0 is_stmt 0 discriminator 1
+ 266 00c6 0028     		cmp	r0, #0
+ 267 00c8 05D0     		beq	.L16
+ 696:main.c        ****     }
+ 268              		.loc 1 696 0 is_stmt 1
+ 269 00ca 0D4A     		ldr	r2, .L18+20
+ 270 00cc 1178     		ldrb	r1, [r2]
+ 271 00ce 0223     		movs	r3, #2
+ 272 00d0 0B43     		orrs	r3, r1
+ 273 00d2 1370     		strb	r3, [r2]
+ 274 00d4 04E0     		b	.L17
+ 275              	.L16:
+ 700:main.c        ****     }
+ 276              		.loc 1 700 0
+ 277 00d6 0A4A     		ldr	r2, .L18+20
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 22
+
+
+ 278 00d8 1378     		ldrb	r3, [r2]
+ 279 00da 0221     		movs	r1, #2
+ 280 00dc 8B43     		bics	r3, r1
+ 281 00de 1370     		strb	r3, [r2]
+ 282              	.L17:
+ 704:main.c        ****     prevLeftClick = currentLeftClick;
+ 283              		.loc 1 704 0
+ 284 00e0 034B     		ldr	r3, .L18+4
+ 285 00e2 5C70     		strb	r4, [r3, #1]
+ 705:main.c        ****     prevRightClick = currentRightClick;
+ 286              		.loc 1 705 0
+ 287 00e4 9D70     		strb	r5, [r3, #2]
+ 706:main.c        **** }
+ 288              		.loc 1 706 0
+ 289 00e6 D870     		strb	r0, [r3, #3]
+ 707:main.c        **** 
+ 290              		.loc 1 707 0
+ 291              		@ sp needed
+ 292              	.LVL12:
+ 293              	.LVL13:
+ 294 00e8 70BD     		pop	{r4, r5, r6, pc}
+ 295              	.L19:
+ 296 00ea C046     		.align	2
+ 297              	.L18:
+ 298 00ec 00000000 		.word	xyDirectionData
+ 299 00f0 00000000 		.word	.LANCHOR1
+ 300 00f4 00000000 		.word	prevTouchPosition
+ 301 00f8 00000000 		.word	touchPosition
+ 302 00fc 00000000 		.word	diffPosition
+ 303 0100 00000000 		.word	mouseClickData
+ 304              		.cfi_endproc
+ 305              	.LFE35:
+ 306              		.size	mouseDataProcess, .-mouseDataProcess
+ 307              		.section	.text.i2cInit,"ax",%progbits
+ 308              		.align	2
+ 309              		.global	i2cInit
+ 310              		.code	16
+ 311              		.thumb_func
+ 312              		.type	i2cInit, %function
+ 313              	i2cInit:
+ 314              	.LFB36:
+ 733:main.c        ****     /* Configure the SCB clock for EZI2C operation */
+ 315              		.loc 1 733 0
+ 316              		.cfi_startproc
+ 317              		@ args = 0, pretend = 0, frame = 0
+ 318              		@ frame_needed = 0, uses_anonymous_args = 0
+ 319 0000 10B5     		push	{r4, lr}
+ 320              		.cfi_def_cfa_offset 8
+ 321              		.cfi_offset 4, -8
+ 322              		.cfi_offset 14, -4
+ 735:main.c        ****     
+ 323              		.loc 1 735 0
+ 324 0002 FFF7FEFF 		bl	EZI2C_Start
+ 325              	.LVL14:
+ 743:main.c        ****         
+ 326              		.loc 1 743 0
+ 327 0006 054A     		ldr	r2, .L21
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 23
+
+
+ 328 0008 5523     		movs	r3, #85
+ 329 000a 1370     		strb	r3, [r2]
+ 746:main.c        ****         
+ 330              		.loc 1 746 0
+ 331 000c 543B     		subs	r3, r3, #84
+ 332 000e D370     		strb	r3, [r2, #3]
+ 749:main.c        ****     #endif
+ 333              		.loc 1 749 0
+ 334 0010 0221     		movs	r1, #2
+ 335 0012 1020     		movs	r0, #16
+ 336 0014 FFF7FEFF 		bl	EZI2C_EzI2CSetBuffer1
+ 337              	.LVL15:
+ 751:main.c        **** 
+ 338              		.loc 1 751 0
+ 339              		@ sp needed
+ 340 0018 10BD     		pop	{r4, pc}
+ 341              	.L22:
+ 342 001a C046     		.align	2
+ 343              	.L21:
+ 344 001c 00000000 		.word	ezI2cBuffer
+ 345              		.cfi_endproc
+ 346              	.LFE36:
+ 347              		.size	i2cInit, .-i2cInit
+ 348              		.section	.text.updateI2cBuffer,"ax",%progbits
+ 349              		.align	2
+ 350              		.global	updateI2cBuffer
+ 351              		.code	16
+ 352              		.thumb_func
+ 353              		.type	updateI2cBuffer, %function
+ 354              	updateI2cBuffer:
+ 355              	.LFB37:
+ 775:main.c        ****     uint16 checksum = 0u;
+ 356              		.loc 1 775 0
+ 357              		.cfi_startproc
+ 358              		@ args = 0, pretend = 0, frame = 0
+ 359              		@ frame_needed = 0, uses_anonymous_args = 0
+ 360              		@ link register save eliminated.
+ 361              	.LVL16:
+ 781:main.c        ****     {
+ 362              		.loc 1 781 0
+ 363 0000 274B     		ldr	r3, .L34
+ 364 0002 1B88     		ldrh	r3, [r3]
+ 365 0004 002B     		cmp	r3, #0
+ 366 0006 03D1     		bne	.L24
+ 781:main.c        ****     {
+ 367              		.loc 1 781 0 is_stmt 0 discriminator 1
+ 368 0008 264B     		ldr	r3, .L34+4
+ 369 000a 1B78     		ldrb	r3, [r3]
+ 370 000c 002B     		cmp	r3, #0
+ 371 000e 30D0     		beq	.L25
+ 372              	.L24:
+ 784:main.c        ****                 
+ 373              		.loc 1 784 0 is_stmt 1
+ 374 0010 0022     		movs	r2, #0
+ 375 0012 254B     		ldr	r3, .L34+8
+ 376 0014 5A70     		strb	r2, [r3, #1]
+ 377              	.LVL17:
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 24
+
+
+ 787:main.c        ****         {
+ 378              		.loc 1 787 0
+ 379 0016 0423     		movs	r3, #4
+ 380 0018 04E0     		b	.L26
+ 381              	.LVL18:
+ 382              	.L27:
+ 789:main.c        ****         }
+ 383              		.loc 1 789 0 discriminator 3
+ 384 001a 0021     		movs	r1, #0
+ 385 001c 224A     		ldr	r2, .L34+8
+ 386 001e D154     		strb	r1, [r2, r3]
+ 787:main.c        ****         {
+ 387              		.loc 1 787 0 discriminator 3
+ 388 0020 0133     		adds	r3, r3, #1
+ 389              	.LVL19:
+ 390 0022 DBB2     		uxtb	r3, r3
+ 391              	.LVL20:
+ 392              	.L26:
+ 787:main.c        ****         {
+ 393              		.loc 1 787 0 is_stmt 0 discriminator 1
+ 394 0024 082B     		cmp	r3, #8
+ 395 0026 F8D9     		bls	.L27
+ 799:main.c        ****         
+ 396              		.loc 1 799 0 is_stmt 1
+ 397 0028 1F4B     		ldr	r3, .L34+8
+ 398              	.LVL21:
+ 399 002a 0522     		movs	r2, #5
+ 400 002c 9A70     		strb	r2, [r3, #2]
+ 801:main.c        ****         ezI2cBuffer[DATA_BYTE2_INDEX] = diffPosition[Y_POSITION];
+ 401              		.loc 1 801 0
+ 402 002e 1D4A     		ldr	r2, .L34+4
+ 403 0030 1278     		ldrb	r2, [r2]
+ 404 0032 1A71     		strb	r2, [r3, #4]
+ 802:main.c        ****         ezI2cBuffer[DATA_BYTE3_INDEX] = diffPosition[X_POSITION];
+ 405              		.loc 1 802 0
+ 406 0034 1D4A     		ldr	r2, .L34+12
+ 407 0036 9178     		ldrb	r1, [r2, #2]
+ 408 0038 5971     		strb	r1, [r3, #5]
+ 803:main.c        ****         ezI2cBuffer[DATA_BYTE4_INDEX] = 0u;
+ 409              		.loc 1 803 0
+ 410 003a 1278     		ldrb	r2, [r2]
+ 411 003c 9A71     		strb	r2, [r3, #6]
+ 804:main.c        ****         ezI2cBuffer[DATA_BYTE5_INDEX] = xyDirectionData;
+ 412              		.loc 1 804 0
+ 413 003e 0022     		movs	r2, #0
+ 414 0040 DA71     		strb	r2, [r3, #7]
+ 805:main.c        **** 
+ 415              		.loc 1 805 0
+ 416 0042 1B4A     		ldr	r2, .L34+16
+ 417 0044 1278     		ldrb	r2, [r2]
+ 418 0046 1A72     		strb	r2, [r3, #8]
+ 419              	.LVL22:
+ 814:main.c        ****         {
+ 420              		.loc 1 814 0
+ 421 0048 0023     		movs	r3, #0
+ 812:main.c        ****                     
+ 422              		.loc 1 812 0
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 25
+
+
+ 423 004a 0122     		movs	r2, #1
+ 814:main.c        ****         {
+ 424              		.loc 1 814 0
+ 425 004c 05E0     		b	.L28
+ 426              	.LVL23:
+ 427              	.L29:
+ 816:main.c        ****         }
+ 428              		.loc 1 816 0 discriminator 3
+ 429 004e 1649     		ldr	r1, .L34+8
+ 430 0050 C95C     		ldrb	r1, [r1, r3]
+ 431 0052 8A18     		adds	r2, r1, r2
+ 432              	.LVL24:
+ 433 0054 92B2     		uxth	r2, r2
+ 434              	.LVL25:
+ 814:main.c        ****         {
+ 435              		.loc 1 814 0 discriminator 3
+ 436 0056 0133     		adds	r3, r3, #1
+ 437              	.LVL26:
+ 438 0058 DBB2     		uxtb	r3, r3
+ 439              	.LVL27:
+ 440              	.L28:
+ 814:main.c        ****         {
+ 441              		.loc 1 814 0 is_stmt 0 discriminator 1
+ 442 005a 0D2B     		cmp	r3, #13
+ 443 005c F7D9     		bls	.L29
+ 820:main.c        ****         ezI2cBuffer[CHECKSUM_LSB_INDEX] = LO8(checksum);
+ 444              		.loc 1 820 0 is_stmt 1
+ 445 005e 110A     		lsrs	r1, r2, #8
+ 446 0060 114B     		ldr	r3, .L34+8
+ 447              	.LVL28:
+ 448 0062 9973     		strb	r1, [r3, #14]
+ 821:main.c        ****         
+ 449              		.loc 1 821 0
+ 450 0064 D2B2     		uxtb	r2, r2
+ 451              	.LVL29:
+ 452 0066 DA73     		strb	r2, [r3, #15]
+ 824:main.c        ****         
+ 453              		.loc 1 824 0
+ 454 0068 0122     		movs	r2, #1
+ 455 006a 5A70     		strb	r2, [r3, #1]
+ 827:main.c        ****     }
+ 456              		.loc 1 827 0
+ 457 006c 0022     		movs	r2, #0
+ 458 006e 114B     		ldr	r3, .L34+20
+ 459 0070 1A71     		strb	r2, [r3, #4]
+ 460              	.L25:
+ 831:main.c        ****     {
+ 461              		.loc 1 831 0
+ 462 0072 0D4B     		ldr	r3, .L34+8
+ 463 0074 5B78     		ldrb	r3, [r3, #1]
+ 464 0076 002B     		cmp	r3, #0
+ 465 0078 10D1     		bne	.L23
+ 834:main.c        ****         {
+ 466              		.loc 1 834 0
+ 467 007a 0E4B     		ldr	r3, .L34+20
+ 468 007c 1B79     		ldrb	r3, [r3, #4]
+ 469 007e 002B     		cmp	r3, #0
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 26
+
+
+ 470 0080 06D0     		beq	.L33
+ 471 0082 0BE0     		b	.L23
+ 472              	.LVL30:
+ 473              	.L32:
+ 839:main.c        ****             }
+ 474              		.loc 1 839 0 discriminator 3
+ 475 0084 0021     		movs	r1, #0
+ 476 0086 084A     		ldr	r2, .L34+8
+ 477 0088 D154     		strb	r1, [r2, r3]
+ 837:main.c        ****             {
+ 478              		.loc 1 837 0 discriminator 3
+ 479 008a 0133     		adds	r3, r3, #1
+ 480              	.LVL31:
+ 481 008c DBB2     		uxtb	r3, r3
+ 482              	.LVL32:
+ 483 008e 00E0     		b	.L31
+ 484              	.LVL33:
+ 485              	.L33:
+ 486 0090 0423     		movs	r3, #4
+ 487              	.L31:
+ 488              	.LVL34:
+ 837:main.c        ****             {
+ 489              		.loc 1 837 0 is_stmt 0 discriminator 1
+ 490 0092 082B     		cmp	r3, #8
+ 491 0094 F6D9     		bls	.L32
+ 843:main.c        ****         }
+ 492              		.loc 1 843 0 is_stmt 1
+ 493 0096 0122     		movs	r2, #1
+ 494 0098 064B     		ldr	r3, .L34+20
+ 495              	.LVL35:
+ 496 009a 1A71     		strb	r2, [r3, #4]
+ 497              	.L23:
+ 846:main.c        **** 
+ 498              		.loc 1 846 0
+ 499              		@ sp needed
+ 500 009c 7047     		bx	lr
+ 501              	.L35:
+ 502 009e C046     		.align	2
+ 503              	.L34:
+ 504 00a0 00000000 		.word	fingerStatus
+ 505 00a4 00000000 		.word	mouseClickData
+ 506 00a8 00000000 		.word	ezI2cBuffer
+ 507 00ac 00000000 		.word	diffPosition
+ 508 00b0 00000000 		.word	xyDirectionData
+ 509 00b4 00000000 		.word	.LANCHOR1
+ 510              		.cfi_endproc
+ 511              	.LFE37:
+ 512              		.size	updateI2cBuffer, .-updateI2cBuffer
+ 513              		.section	.text.enterDeepSleepLowPowerMode,"ax",%progbits
+ 514              		.align	2
+ 515              		.global	enterDeepSleepLowPowerMode
+ 516              		.code	16
+ 517              		.thumb_func
+ 518              		.type	enterDeepSleepLowPowerMode, %function
+ 519              	enterDeepSleepLowPowerMode:
+ 520              	.LFB40:
+ 882:main.c        **** 
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 27
+
+
+ 883:main.c        **** /******************************************************************************
+ 884:main.c        **** * Function Name: WDT_Start
+ 885:main.c        **** *******************************************************************************
+ 886:main.c        **** *
+ 887:main.c        **** * Summary:
+ 888:main.c        **** *  Configures the Watchdog Timer (WDT).
+ 889:main.c        **** *
+ 890:main.c        **** * Parameters:
+ 891:main.c        **** *  None.
+ 892:main.c        **** *
+ 893:main.c        **** * Return:
+ 894:main.c        **** *  None.
+ 895:main.c        **** *
+ 896:main.c        **** * Theory: This API configures the WDT interrupt and loads the WDT match value.
+ 897:main.c        **** *         The WDT interrupt is masked to route the interrupt to CPU for periodic
+ 898:main.c        **** *         interrupt generation.
+ 899:main.c        **** *
+ 900:main.c        **** * Side Effects: None
+ 901:main.c        **** *
+ 902:main.c        **** * Note:
+ 903:main.c        **** *
+ 904:main.c        **** *******************************************************************************/
+ 905:main.c        **** void WDT_Start(void)
+ 906:main.c        **** {
+ 907:main.c        ****     /* Setup ISR for watchdog interrupt */
+ 908:main.c        ****     CyIntSetVector(WDT_IRQ_NUMBER, Timer_Interrupt);
+ 909:main.c        ****    
+ 910:main.c        ****     /* Get the actual match value required to generate a given delay */
+ 911:main.c        ****     CalibrateWdtMatchValue();
+ 912:main.c        ****     
+ 913:main.c        ****     /* WDT match value is updated in order to obtain periodic interrupts */
+ 914:main.c        ****     CySysWdtWriteMatch(CySysWdtReadCount() + wdtMatchValue);
+ 915:main.c        ****     
+ 916:main.c        ****     /* Pass the WDT interrupt from SRSS to NVIC */
+ 917:main.c        ****     CySysWdtUnmaskInterrupt();
+ 918:main.c        ****     
+ 919:main.c        ****     /* Enable WDT interrupt in NVIC to pass it to CPU */
+ 920:main.c        ****     CyIntEnable(WDT_IRQ_NUMBER);
+ 921:main.c        **** }
+ 922:main.c        **** 
+ 923:main.c        **** /*******************************************************************************
+ 924:main.c        **** * Function Name: enterDeepSleepLowPowerMode
+ 925:main.c        **** ********************************************************************************
+ 926:main.c        **** * Summary:
+ 927:main.c        **** *  Puts the device in DeepSleep power mode. Reconfigures the Components for 
+ 928:main.c        **** *  normal operation after wake-up. 
+ 929:main.c        **** *
+ 930:main.c        **** * Parameters:
+ 931:main.c        **** *  void
+ 932:main.c        **** *
+ 933:main.c        **** * Return:
+ 934:main.c        **** *  void
+ 935:main.c        **** *
+ 936:main.c        **** * Theory: Before going to deep sleep, the API checks for any I2C activity.
+ 937:main.c        **** *         If I2C is active, the API returns without forcing the system to DeepSleep.
+ 938:main.c        **** *         If I2C is inactive, device is put to DeepSleep and is woken up by WDT or
+ 939:main.c        **** *         I2C interrupt.
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 28
+
+
+ 940:main.c        **** *
+ 941:main.c        **** * Side Effects: None
+ 942:main.c        **** *
+ 943:main.c        **** * Note: None
+ 944:main.c        **** *
+ 945:main.c        **** *******************************************************************************/
+ 946:main.c        **** void enterDeepSleepLowPowerMode(void)
+ 947:main.c        **** {
+ 521              		.loc 1 947 0
+ 522              		.cfi_startproc
+ 523              		@ args = 0, pretend = 0, frame = 0
+ 524              		@ frame_needed = 0, uses_anonymous_args = 0
+ 525 0000 10B5     		push	{r4, lr}
+ 526              		.cfi_def_cfa_offset 8
+ 527              		.cfi_offset 4, -8
+ 528              		.cfi_offset 14, -4
+ 529              	.LVL36:
+ 948:main.c        ****     /* EZI2C_Sleep routine should be called only after on-going I2C 
+ 949:main.c        ****     *  transaction is complete
+ 950:main.c        ****     *  Enter critical section to lock slave state 
+ 951:main.c        ****     */
+ 952:main.c        ****     
+ 953:main.c        ****     /* Variable to store interrupt state */
+ 954:main.c        ****     uint32 interruptState = 0u;
+ 955:main.c        ****     
+ 956:main.c        ****     interruptState = CyEnterCriticalSection();
+ 530              		.loc 1 956 0
+ 531 0002 FFF7FEFF 		bl	CyEnterCriticalSection
+ 532              	.LVL37:
+ 533 0006 0400     		movs	r4, r0
+ 534              	.LVL38:
+ 957:main.c        ****     
+ 958:main.c        ****     /* Check if I2C is busy. If so, skip deep sleep until I2C is free */
+ 959:main.c        ****     if(!(EZI2C_EzI2CGetActivity() & EZI2C_EZI2C_STATUS_BUSY))
+ 535              		.loc 1 959 0
+ 536 0008 FFF7FEFF 		bl	EZI2C_EzI2CGetActivity
+ 537              	.LVL39:
+ 538 000c 8306     		lsls	r3, r0, #26
+ 539 000e 09D4     		bmi	.L37
+ 960:main.c        ****     {
+ 961:main.c        ****         /* Prepare for deep sleep - stop ILO calibration */
+ 962:main.c        ****         CySysClkIloStopMeasurement();
+ 540              		.loc 1 962 0
+ 541 0010 FFF7FEFF 		bl	CySysClkIloStopMeasurement
+ 542              	.LVL40:
+ 963:main.c        ****         
+ 964:main.c        ****         /* Configure slave to be wakeup source */
+ 965:main.c        ****         EZI2C_Sleep();
+ 543              		.loc 1 965 0
+ 544 0014 FFF7FEFF 		bl	EZI2C_Sleep
+ 545              	.LVL41:
+ 966:main.c        ****         
+ 967:main.c        ****     	/* Enter DeepSleep. */
+ 968:main.c        ****     	CySysPmDeepSleep();	
+ 546              		.loc 1 968 0
+ 547 0018 FFF7FEFF 		bl	CySysPmDeepSleep
+ 548              	.LVL42:
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 29
+
+
+ 969:main.c        ****        
+ 970:main.c        ****         /* WDT or any I2C communication wakes up device from deep sleep. */
+ 971:main.c        **** 
+ 972:main.c        ****         /* Configure slave for active mode operation */
+ 973:main.c        ****         EZI2C_Wakeup();
+ 549              		.loc 1 973 0
+ 550 001c FFF7FEFF 		bl	EZI2C_Wakeup
+ 551              	.LVL43:
+ 974:main.c        ****         
+ 975:main.c        ****         /* Start the ILO accuracy measurement for accurate scan interval generation */
+ 976:main.c        ****         CySysClkIloStartMeasurement();
+ 552              		.loc 1 976 0
+ 553 0020 FFF7FEFF 		bl	CySysClkIloStartMeasurement
+ 554              	.LVL44:
+ 555              	.L37:
+ 977:main.c        ****     }
+ 978:main.c        ****     /* Enable interrupts */
+ 979:main.c        ****     CyExitCriticalSection(interruptState);
+ 556              		.loc 1 979 0
+ 557 0024 2000     		movs	r0, r4
+ 558 0026 FFF7FEFF 		bl	CyExitCriticalSection
+ 559              	.LVL45:
+ 980:main.c        **** }
+ 560              		.loc 1 980 0
+ 561              		@ sp needed
+ 562              	.LVL46:
+ 563 002a 10BD     		pop	{r4, pc}
+ 564              		.cfi_endproc
+ 565              	.LFE40:
+ 566              		.size	enterDeepSleepLowPowerMode, .-enterDeepSleepLowPowerMode
+ 567              		.section	.text.anyWidgetActive,"ax",%progbits
+ 568              		.align	2
+ 569              		.global	anyWidgetActive
+ 570              		.code	16
+ 571              		.thumb_func
+ 572              		.type	anyWidgetActive, %function
+ 573              	anyWidgetActive:
+ 574              	.LFB41:
+ 981:main.c        **** 
+ 982:main.c        **** /*******************************************************************************
+ 983:main.c        **** * Function Name: anyWidgetActive
+ 984:main.c        **** ********************************************************************************
+ 985:main.c        **** *
+ 986:main.c        **** * Summary:
+ 987:main.c        **** *  This API checks if any widget is active
+ 988:main.c        **** *
+ 989:main.c        **** * Parameters:
+ 990:main.c        **** *  None.
+ 991:main.c        **** *
+ 992:main.c        **** * Theory: This API checks if any of the LeftClick, RightClick or trackpad sensors
+ 993:main.c        **** *         are active and returns true if any one of them is active.
+ 994:main.c        **** *
+ 995:main.c        **** * Side Effects: None
+ 996:main.c        **** *
+ 997:main.c        **** * Note: None
+ 998:main.c        **** *
+ 999:main.c        **** *******************************************************************************/
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 30
+
+
+1000:main.c        **** 
+1001:main.c        **** bool anyWidgetActive(void)
+1002:main.c        **** {
+ 575              		.loc 1 1002 0
+ 576              		.cfi_startproc
+ 577              		@ args = 0, pretend = 0, frame = 0
+ 578              		@ frame_needed = 0, uses_anonymous_args = 0
+ 579 0000 10B5     		push	{r4, lr}
+ 580              		.cfi_def_cfa_offset 8
+ 581              		.cfi_offset 4, -8
+ 582              		.cfi_offset 14, -4
+1003:main.c        ****     /* Check if either trackpad or any of the two button sensors are active */
+1004:main.c        ****     if(CapSense_IsWidgetActive(CapSense_TRACKPAD_WDGT_ID) || \
+ 583              		.loc 1 1004 0
+ 584 0002 0020     		movs	r0, #0
+ 585 0004 FFF7FEFF 		bl	CapSense_IsWidgetActive
+ 586              	.LVL47:
+ 587 0008 0028     		cmp	r0, #0
+ 588 000a 0AD1     		bne	.L40
+1005:main.c        ****        CapSense_IsWidgetActive(CapSense_LEFTCLICK_WDGT_ID) || \
+ 589              		.loc 1 1005 0 discriminator 1
+ 590 000c 0130     		adds	r0, r0, #1
+ 591 000e FFF7FEFF 		bl	CapSense_IsWidgetActive
+ 592              	.LVL48:
+1004:main.c        ****        CapSense_IsWidgetActive(CapSense_LEFTCLICK_WDGT_ID) || \
+ 593              		.loc 1 1004 0 discriminator 1
+ 594 0012 0028     		cmp	r0, #0
+ 595 0014 07D1     		bne	.L41
+1006:main.c        ****        CapSense_IsWidgetActive(CapSense_RIGHTCLICK_WDGT_ID)
+ 596              		.loc 1 1006 0
+ 597 0016 0230     		adds	r0, r0, #2
+ 598 0018 FFF7FEFF 		bl	CapSense_IsWidgetActive
+ 599              	.LVL49:
+1005:main.c        ****        CapSense_IsWidgetActive(CapSense_LEFTCLICK_WDGT_ID) || \
+ 600              		.loc 1 1005 0
+ 601 001c 0028     		cmp	r0, #0
+ 602 001e 04D1     		bne	.L42
+ 603 0020 04E0     		b	.L39
+ 604              	.L40:
+1007:main.c        ****       )
+1008:main.c        ****     {
+1009:main.c        ****         return TRUE;
+ 605              		.loc 1 1009 0
+ 606 0022 0120     		movs	r0, #1
+ 607 0024 02E0     		b	.L39
+ 608              	.L41:
+ 609 0026 0120     		movs	r0, #1
+ 610 0028 00E0     		b	.L39
+ 611              	.L42:
+ 612 002a 0120     		movs	r0, #1
+ 613              	.L39:
+1010:main.c        ****     }
+1011:main.c        ****     else
+1012:main.c        ****     {
+1013:main.c        ****         return FALSE;
+1014:main.c        ****     }
+1015:main.c        **** }
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 31
+
+
+ 614              		.loc 1 1015 0
+ 615              		@ sp needed
+ 616 002c 10BD     		pop	{r4, pc}
+ 617              		.cfi_endproc
+ 618              	.LFE41:
+ 619              		.size	anyWidgetActive, .-anyWidgetActive
+ 620 002e C046     		.section	.text.CalibrateWdtMatchValue,"ax",%progbits
+ 621              		.align	2
+ 622              		.global	CalibrateWdtMatchValue
+ 623              		.code	16
+ 624              		.thumb_func
+ 625              		.type	CalibrateWdtMatchValue, %function
+ 626              	CalibrateWdtMatchValue:
+ 627              	.LFB42:
+1016:main.c        **** 
+1017:main.c        **** /*******************************************************************************
+1018:main.c        **** * Function Name: CalibrateWdtMatchValue
+1019:main.c        **** ********************************************************************************
+1020:main.c        **** * Summary: 
+1021:main.c        **** *  This function calibrates the match value of the Watchdog Timer 
+1022:main.c        **** *
+1023:main.c        **** * Parameter:
+1024:main.c        **** *  None
+1025:main.c        **** *
+1026:main.c        **** * Return:
+1027:main.c        **** *  void
+1028:main.c        **** *
+1029:main.c        **** * Theory: The ILO is calibrated using IMO to improve the accuracy of ILO.
+1030:main.c        **** *
+1031:main.c        **** * Side Effects: None
+1032:main.c        **** *
+1033:main.c        **** * Note:
+1034:main.c        **** *
+1035:main.c        **** *******************************************************************************/
+1036:main.c        **** void CalibrateWdtMatchValue()
+1037:main.c        **** {    
+ 628              		.loc 1 1037 0
+ 629              		.cfi_startproc
+ 630              		@ args = 0, pretend = 0, frame = 8
+ 631              		@ frame_needed = 0, uses_anonymous_args = 0
+ 632 0000 00B5     		push	{lr}
+ 633              		.cfi_def_cfa_offset 4
+ 634              		.cfi_offset 14, -4
+ 635 0002 83B0     		sub	sp, sp, #12
+ 636              		.cfi_def_cfa_offset 16
+1038:main.c        ****     /* Contains ILO Trimmed value */
+1039:main.c        ****     uint32 tempIloCounts = 0u;
+ 637              		.loc 1 1039 0
+ 638 0004 0023     		movs	r3, #0
+ 639 0006 0193     		str	r3, [sp, #4]
+ 640              	.LVL50:
+1040:main.c        ****     
+1041:main.c        ****     /* Contains ILO Trimmed value */
+1042:main.c        ****     uint32 desiredDelay = 0;
+1043:main.c        ****     
+1044:main.c        ****     /* Desired delay for ILO Trimming */
+1045:main.c        ****     if(deviceScanMode == FAST_SCAN_MODE)
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 32
+
+
+ 641              		.loc 1 1045 0
+ 642 0008 084B     		ldr	r3, .L47
+ 643 000a 1B78     		ldrb	r3, [r3]
+ 644 000c 012B     		cmp	r3, #1
+ 645 000e 02D1     		bne	.L46
+1046:main.c        ****     {
+1047:main.c        ****         desiredDelay = WDT_TIMEOUT_FAST_SCAN;
+ 646              		.loc 1 1047 0
+ 647 0010 C820     		movs	r0, #200
+ 648 0012 8000     		lsls	r0, r0, #2
+ 649 0014 00E0     		b	.L44
+ 650              	.L46:
+1048:main.c        ****     }
+1049:main.c        ****     else
+1050:main.c        ****     {
+1051:main.c        ****         desiredDelay = WDT_TIMEOUT_SLOW_SCAN;
+ 651              		.loc 1 1051 0
+ 652 0016 0648     		ldr	r0, .L47+4
+ 653              	.L44:
+ 654              	.LVL51:
+1052:main.c        ****     }
+1053:main.c        ****     
+1054:main.c        ****     /* Get the ILO compensated counts i.e. the actual counts for the desired ILO frequency 
+1055:main.c        **** 	*  Trimming is done to improve ILO accuracy using IMO; ILO default accuracy is +/- 60% 
+1056:main.c        ****     */
+1057:main.c        ****     if(CYRET_SUCCESS == CySysClkIloCompensate(desiredDelay, &tempIloCounts))
+ 655              		.loc 1 1057 0
+ 656 0018 01A9     		add	r1, sp, #4
+ 657 001a FFF7FEFF 		bl	CySysClkIloCompensate
+ 658              	.LVL52:
+ 659 001e 0028     		cmp	r0, #0
+ 660 0020 02D1     		bne	.L43
+1058:main.c        ****     {    
+1059:main.c        ****         wdtMatchValue = (uint32)tempIloCounts;
+ 661              		.loc 1 1059 0
+ 662 0022 044B     		ldr	r3, .L47+8
+ 663 0024 019A     		ldr	r2, [sp, #4]
+ 664 0026 1A60     		str	r2, [r3]
+ 665              	.L43:
+1060:main.c        ****     }    
+1061:main.c        **** }
+ 666              		.loc 1 1061 0
+ 667 0028 03B0     		add	sp, sp, #12
+ 668              		@ sp needed
+ 669 002a 00BD     		pop	{pc}
+ 670              	.L48:
+ 671              		.align	2
+ 672              	.L47:
+ 673 002c 00000000 		.word	deviceScanMode
+ 674 0030 70170000 		.word	6000
+ 675 0034 00000000 		.word	.LANCHOR0
+ 676              		.cfi_endproc
+ 677              	.LFE42:
+ 678              		.size	CalibrateWdtMatchValue, .-CalibrateWdtMatchValue
+ 679              		.section	.text.WDT_Start,"ax",%progbits
+ 680              		.align	2
+ 681              		.global	WDT_Start
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 33
+
+
+ 682              		.code	16
+ 683              		.thumb_func
+ 684              		.type	WDT_Start, %function
+ 685              	WDT_Start:
+ 686              	.LFB39:
+ 906:main.c        ****     /* Setup ISR for watchdog interrupt */
+ 687              		.loc 1 906 0
+ 688              		.cfi_startproc
+ 689              		@ args = 0, pretend = 0, frame = 0
+ 690              		@ frame_needed = 0, uses_anonymous_args = 0
+ 691 0000 10B5     		push	{r4, lr}
+ 692              		.cfi_def_cfa_offset 8
+ 693              		.cfi_offset 4, -8
+ 694              		.cfi_offset 14, -4
+ 908:main.c        ****    
+ 695              		.loc 1 908 0
+ 696 0002 0949     		ldr	r1, .L50
+ 697 0004 0620     		movs	r0, #6
+ 698 0006 FFF7FEFF 		bl	CyIntSetVector
+ 699              	.LVL53:
+ 911:main.c        ****     
+ 700              		.loc 1 911 0
+ 701 000a FFF7FEFF 		bl	CalibrateWdtMatchValue
+ 702              	.LVL54:
+ 914:main.c        ****     
+ 703              		.loc 1 914 0
+ 704 000e FFF7FEFF 		bl	CySysWdtGetCount
+ 705              	.LVL55:
+ 706 0012 064B     		ldr	r3, .L50+4
+ 707 0014 1B68     		ldr	r3, [r3]
+ 708 0016 C018     		adds	r0, r0, r3
+ 709 0018 FFF7FEFF 		bl	CySysWdtSetMatch
+ 710              	.LVL56:
+ 917:main.c        ****     
+ 711              		.loc 1 917 0
+ 712 001c FFF7FEFF 		bl	CySysWdtUnmaskInterrupt
+ 713              	.LVL57:
+ 920:main.c        **** }
+ 714              		.loc 1 920 0
+ 715 0020 0620     		movs	r0, #6
+ 716 0022 FFF7FEFF 		bl	CyIntEnable
+ 717              	.LVL58:
+ 921:main.c        **** 
+ 718              		.loc 1 921 0
+ 719              		@ sp needed
+ 720 0026 10BD     		pop	{r4, pc}
+ 721              	.L51:
+ 722              		.align	2
+ 723              	.L50:
+ 724 0028 00000000 		.word	Timer_Interrupt
+ 725 002c 00000000 		.word	.LANCHOR0
+ 726              		.cfi_endproc
+ 727              	.LFE39:
+ 728              		.size	WDT_Start, .-WDT_Start
+ 729              		.section	.text.main,"ax",%progbits
+ 730              		.align	2
+ 731              		.global	main
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 34
+
+
+ 732              		.code	16
+ 733              		.thumb_func
+ 734              		.type	main, %function
+ 735              	main:
+ 736              	.LFB33:
+ 250:main.c        ****     /* This code implements two application level power modes: 
+ 737              		.loc 1 250 0
+ 738              		.cfi_startproc
+ 739              		@ args = 0, pretend = 0, frame = 0
+ 740              		@ frame_needed = 0, uses_anonymous_args = 0
+ 741 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 742              		.cfi_def_cfa_offset 24
+ 743              		.cfi_offset 3, -24
+ 744              		.cfi_offset 4, -20
+ 745              		.cfi_offset 5, -16
+ 746              		.cfi_offset 6, -12
+ 747              		.cfi_offset 7, -8
+ 748              		.cfi_offset 14, -4
+ 749              	.LVL59:
+ 270:main.c        ****     
+ 750              		.loc 1 270 0
+ 751 0002 0122     		movs	r2, #1
+ 752 0004 6E4B     		ldr	r3, .L79
+ 753 0006 1A70     		strb	r2, [r3]
+ 273:main.c        ****     
+ 754              		.loc 1 273 0
+ 755              		.syntax divided
+ 756              	@ 273 "main.c" 1
+ 757 0008 62B6     		CPSIE   i
+ 758              	@ 0 "" 2
+ 276:main.c        ****     
+ 759              		.loc 1 276 0
+ 760              		.thumb
+ 761              		.syntax unified
+ 762 000a FFF7FEFF 		bl	i2cInit
+ 763              	.LVL60:
+ 279:main.c        ****     
+ 764              		.loc 1 279 0
+ 765 000e 6420     		movs	r0, #100
+ 766 0010 FFF7FEFF 		bl	CyDelay
+ 767              	.LVL61:
+ 282:main.c        **** 
+ 768              		.loc 1 282 0
+ 769 0014 FFF7FEFF 		bl	capSenseInit
+ 770              	.LVL62:
+ 285:main.c        ****    
+ 771              		.loc 1 285 0
+ 772 0018 FFF7FEFF 		bl	WDT_Start
+ 773              	.LVL63:
+ 261:main.c        ****     
+ 774              		.loc 1 261 0
+ 775 001c 0026     		movs	r6, #0
+ 258:main.c        ****     
+ 776              		.loc 1 258 0
+ 777 001e 0027     		movs	r7, #0
+ 255:main.c        ****     
+ 778              		.loc 1 255 0
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 35
+
+
+ 779 0020 0124     		movs	r4, #1
+ 780 0022 02E0     		b	.L53
+ 781              	.LVL64:
+ 782              	.L77:
+ 408:main.c        **** 
+ 783              		.loc 1 408 0
+ 784 0024 0424     		movs	r4, #4
+ 785 0026 00E0     		b	.L53
+ 786              	.L78:
+ 787 0028 0424     		movs	r4, #4
+ 788              	.LVL65:
+ 789              	.L53:
+ 289:main.c        **** 		{
+ 790              		.loc 1 289 0
+ 791 002a 022C     		cmp	r4, #2
+ 792 002c 3ED0     		beq	.L55
+ 793 002e 02D8     		bhi	.L56
+ 794 0030 012C     		cmp	r4, #1
+ 795 0032 06D0     		beq	.L57
+ 796 0034 BFE0     		b	.L54
+ 797              	.L56:
+ 798 0036 032C     		cmp	r4, #3
+ 799 0038 51D0     		beq	.L58
+ 800 003a 042C     		cmp	r4, #4
+ 801 003c 00D1     		bne	.LCB676
+ 802 003e ACE0     		b	.L59	@long jump
+ 803              	.LCB676:
+ 804 0040 B9E0     		b	.L54
+ 805              	.L57:
+ 293:main.c        ****                 {
+ 806              		.loc 1 293 0
+ 807 0042 FFF7FEFF 		bl	CapSense_IsBusy
+ 808              	.LVL66:
+ 809 0046 0028     		cmp	r0, #0
+ 810 0048 EFD1     		bne	.L53
+ 301:main.c        ****                     {
+ 811              		.loc 1 301 0
+ 812 004a 5D4B     		ldr	r3, .L79
+ 813 004c 1B78     		ldrb	r3, [r3]
+ 814 004e 012B     		cmp	r3, #1
+ 815 0050 21D1     		bne	.L61
+ 309:main.c        ****                         {
+ 816              		.loc 1 309 0
+ 817 0052 002E     		cmp	r6, #0
+ 818 0054 03D1     		bne	.L62
+ 312:main.c        ****                             
+ 819              		.loc 1 312 0
+ 820 0056 FFF7FEFF 		bl	CapSense_CSDSetupWidget
+ 821              	.LVL67:
+ 315:main.c        ****                         }
+ 822              		.loc 1 315 0
+ 823 005a 0136     		adds	r6, r6, #1
+ 824 005c 22E0     		b	.L63
+ 825              	.LVL68:
+ 826              	.L62:
+ 317:main.c        ****                         {
+ 827              		.loc 1 317 0
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 36
+
+
+ 828 005e 012E     		cmp	r6, #1
+ 829 0060 04D1     		bne	.L64
+ 320:main.c        ****                             
+ 830              		.loc 1 320 0
+ 831 0062 0120     		movs	r0, #1
+ 832 0064 FFF7FEFF 		bl	CapSense_CSDSetupWidget
+ 833              	.LVL69:
+ 323:main.c        ****                         }
+ 834              		.loc 1 323 0
+ 835 0068 0136     		adds	r6, r6, #1
+ 836 006a 1BE0     		b	.L63
+ 837              	.LVL70:
+ 838              	.L64:
+ 325:main.c        ****                         {
+ 839              		.loc 1 325 0
+ 840 006c 022E     		cmp	r6, #2
+ 841 006e 0DD1     		bne	.L65
+ 328:main.c        ****                             
+ 842              		.loc 1 328 0
+ 843 0070 0220     		movs	r0, #2
+ 844 0072 FFF7FEFF 		bl	CapSense_CSDSetupWidget
+ 845              	.LVL71:
+ 332:main.c        ****                             {
+ 846              		.loc 1 332 0
+ 847 0076 0320     		movs	r0, #3
+ 848 0078 FFF7FEFF 		bl	CapSense_IsWidgetActive
+ 849              	.LVL72:
+ 850 007c 0028     		cmp	r0, #0
+ 851 007e 0ED0     		beq	.L73
+ 332:main.c        ****                             {
+ 852              		.loc 1 332 0 is_stmt 0 discriminator 1
+ 853 0080 FFF7FEFF 		bl	anyWidgetActive
+ 854              	.LVL73:
+ 855 0084 0028     		cmp	r0, #0
+ 856 0086 0CD1     		bne	.L74
+ 334:main.c        ****                             }
+ 857              		.loc 1 334 0 is_stmt 1
+ 858 0088 0136     		adds	r6, r6, #1
+ 859              	.LVL74:
+ 860 008a 0BE0     		b	.L63
+ 861              	.LVL75:
+ 862              	.L65:
+ 347:main.c        ****                             
+ 863              		.loc 1 347 0
+ 864 008c 0320     		movs	r0, #3
+ 865 008e FFF7FEFF 		bl	CapSense_CSDSetupWidget
+ 866              	.LVL76:
+ 350:main.c        ****                         }
+ 867              		.loc 1 350 0
+ 868 0092 0026     		movs	r6, #0
+ 869 0094 06E0     		b	.L63
+ 870              	.LVL77:
+ 871              	.L61:
+ 357:main.c        ****                     }
+ 872              		.loc 1 357 0
+ 873 0096 0320     		movs	r0, #3
+ 874 0098 FFF7FEFF 		bl	CapSense_CSDSetupWidget
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 37
+
+
+ 875              	.LVL78:
+ 876 009c 02E0     		b	.L63
+ 877              	.L73:
+ 340:main.c        ****                             }
+ 878              		.loc 1 340 0
+ 879 009e 0026     		movs	r6, #0
+ 880              	.LVL79:
+ 881 00a0 00E0     		b	.L63
+ 882              	.LVL80:
+ 883              	.L74:
+ 884 00a2 0026     		movs	r6, #0
+ 885              	.LVL81:
+ 886              	.L63:
+ 361:main.c        ****                     
+ 887              		.loc 1 361 0
+ 888 00a4 FFF7FEFF 		bl	CapSense_Scan
+ 889              	.LVL82:
+ 364:main.c        ****                 }
+ 890              		.loc 1 364 0
+ 891 00a8 0224     		movs	r4, #2
+ 892 00aa BEE7     		b	.L53
+ 893              	.LVL83:
+ 894              	.L55:
+ 377:main.c        ****                             
+ 895              		.loc 1 377 0
+ 896 00ac FFF7FEFF 		bl	CyEnterCriticalSection
+ 897              	.LVL84:
+ 898 00b0 0500     		movs	r5, r0
+ 899              	.LVL85:
+ 380:main.c        ****                 {
+ 900              		.loc 1 380 0
+ 901 00b2 FFF7FEFF 		bl	CapSense_IsBusy
+ 902              	.LVL86:
+ 903 00b6 0028     		cmp	r0, #0
+ 904 00b8 02D0     		beq	.L66
+ 383:main.c        ****                 }
+ 905              		.loc 1 383 0
+ 906 00ba FFF7FEFF 		bl	CySysPmSleep
+ 907              	.LVL87:
+ 908 00be 0AE0     		b	.L67
+ 909              	.L66:
+ 389:main.c        ****                     {
+ 910              		.loc 1 389 0
+ 911 00c0 3F4B     		ldr	r3, .L79
+ 912 00c2 1B78     		ldrb	r3, [r3]
+ 913 00c4 012B     		cmp	r3, #1
+ 914 00c6 03D1     		bne	.L75
+ 389:main.c        ****                     {
+ 915              		.loc 1 389 0 is_stmt 0 discriminator 1
+ 916 00c8 002E     		cmp	r6, #0
+ 917 00ca 03D1     		bne	.L76
+ 399:main.c        ****                     }
+ 918              		.loc 1 399 0 is_stmt 1
+ 919 00cc 0324     		movs	r4, #3
+ 920              	.LVL88:
+ 921 00ce 02E0     		b	.L67
+ 922              	.LVL89:
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 38
+
+
+ 923              	.L75:
+ 924 00d0 0324     		movs	r4, #3
+ 925              	.LVL90:
+ 926 00d2 00E0     		b	.L67
+ 927              	.LVL91:
+ 928              	.L76:
+ 391:main.c        ****                     }
+ 929              		.loc 1 391 0
+ 930 00d4 0124     		movs	r4, #1
+ 931              	.LVL92:
+ 932              	.L67:
+ 403:main.c        ****             break;
+ 933              		.loc 1 403 0
+ 934 00d6 2800     		movs	r0, r5
+ 935 00d8 FFF7FEFF 		bl	CyExitCriticalSection
+ 936              	.LVL93:
+ 404:main.c        ****             
+ 937              		.loc 1 404 0
+ 938 00dc A5E7     		b	.L53
+ 939              	.LVL94:
+ 940              	.L58:
+ 410:main.c        ****                 {
+ 941              		.loc 1 410 0
+ 942 00de 384B     		ldr	r3, .L79
+ 943 00e0 1B78     		ldrb	r3, [r3]
+ 944 00e2 012B     		cmp	r3, #1
+ 945 00e4 45D1     		bne	.L68
+ 416:main.c        ****                     CapSense_ProcessWidget(CapSense_LEFTCLICK_WDGT_ID);
+ 946              		.loc 1 416 0
+ 947 00e6 0020     		movs	r0, #0
+ 948 00e8 FFF7FEFF 		bl	CapSense_ProcessWidget
+ 949              	.LVL95:
+ 417:main.c        ****                     CapSense_ProcessWidget(CapSense_RIGHTCLICK_WDGT_ID);
+ 950              		.loc 1 417 0
+ 951 00ec 0120     		movs	r0, #1
+ 952 00ee FFF7FEFF 		bl	CapSense_ProcessWidget
+ 953              	.LVL96:
+ 418:main.c        ****                     
+ 954              		.loc 1 418 0
+ 955 00f2 0220     		movs	r0, #2
+ 956 00f4 FFF7FEFF 		bl	CapSense_ProcessWidget
+ 957              	.LVL97:
+ 423:main.c        ****                        CapSense_ProcessWidget(CapSense_GANGEDSENSOR_WDGT_ID);
+ 958              		.loc 1 423 0
+ 959 00f8 FFF7FEFF 		bl	anyWidgetActive
+ 960              	.LVL98:
+ 961 00fc 0028     		cmp	r0, #0
+ 962 00fe 07D1     		bne	.L69
+ 423:main.c        ****                        CapSense_ProcessWidget(CapSense_GANGEDSENSOR_WDGT_ID);
+ 963              		.loc 1 423 0 is_stmt 0 discriminator 1
+ 964 0100 0330     		adds	r0, r0, #3
+ 965 0102 FFF7FEFF 		bl	CapSense_IsWidgetActive
+ 966              	.LVL99:
+ 967 0106 0028     		cmp	r0, #0
+ 968 0108 02D0     		beq	.L69
+ 424:main.c        ****                     
+ 969              		.loc 1 424 0 is_stmt 1
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 39
+
+
+ 970 010a 0320     		movs	r0, #3
+ 971 010c FFF7FEFF 		bl	CapSense_ProcessWidget
+ 972              	.LVL100:
+ 973              	.L69:
+ 427:main.c        ****                     
+ 974              		.loc 1 427 0
+ 975 0110 0020     		movs	r0, #0
+ 976 0112 FFF7FEFF 		bl	CapSense_IsWidgetActive
+ 977              	.LVL101:
+ 978 0116 80B2     		uxth	r0, r0
+ 979 0118 2A4B     		ldr	r3, .L79+4
+ 980 011a 1880     		strh	r0, [r3]
+ 430:main.c        **** 					{
+ 981              		.loc 1 430 0
+ 982 011c 0128     		cmp	r0, #1
+ 983 011e 07D1     		bne	.L70
+ 432:main.c        ****                         
+ 984              		.loc 1 432 0
+ 985 0120 0020     		movs	r0, #0
+ 986 0122 FFF7FEFF 		bl	CapSense_GetXYCoordinates
+ 987              	.LVL102:
+ 435:main.c        ****     					touchPosition[Y_POSITION] = HI16 (tempCoordinates);
+ 988              		.loc 1 435 0
+ 989 0126 284B     		ldr	r3, .L79+8
+ 990 0128 1880     		strh	r0, [r3]
+ 436:main.c        **** 					}
+ 991              		.loc 1 436 0
+ 992 012a 000C     		lsrs	r0, r0, #16
+ 993              	.LVL103:
+ 994 012c 5880     		strh	r0, [r3, #2]
+ 995 012e 03E0     		b	.L71
+ 996              	.L70:
+ 443:main.c        **** 						touchPosition[Y_POSITION] = 0u;
+ 997              		.loc 1 443 0
+ 998 0130 254B     		ldr	r3, .L79+8
+ 999 0132 0022     		movs	r2, #0
+ 1000 0134 1A80     		strh	r2, [r3]
+ 444:main.c        ****                     }
+ 1001              		.loc 1 444 0
+ 1002 0136 5A80     		strh	r2, [r3, #2]
+ 1003              	.L71:
+ 448:main.c        ****                     
+ 1004              		.loc 1 448 0
+ 1005 0138 FFF7FEFF 		bl	mouseDataProcess
+ 1006              	.LVL104:
+ 451:main.c        ****                         
+ 1007              		.loc 1 451 0
+ 1008 013c FFF7FEFF 		bl	updateI2cBuffer
+ 1009              	.LVL105:
+ 454:main.c        ****                     {
+ 1010              		.loc 1 454 0
+ 1011 0140 FFF7FEFF 		bl	CapSense_IsAnyWidgetActive
+ 1012              	.LVL106:
+ 1013 0144 0028     		cmp	r0, #0
+ 1014 0146 0ED1     		bne	.L72
+ 457:main.c        ****                         
+ 1015              		.loc 1 457 0
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 40
+
+
+ 1016 0148 0130     		adds	r0, r0, #1
+ 1017 014a FFF7FEFF 		bl	Red_LED_Write
+ 1018              	.LVL107:
+ 460:main.c        ****                         
+ 1019              		.loc 1 460 0
+ 1020 014e 0137     		adds	r7, r7, #1
+ 1021              	.LVL108:
+ 463:main.c        ****                         {
+ 1022              		.loc 1 463 0
+ 1023 0150 952F     		cmp	r7, #149
+ 1024 0152 00D8     		bhi	.LCB894
+ 1025 0154 66E7     		b	.L77	@long jump
+ 1026              	.LCB894:
+ 466:main.c        **** 
+ 1027              		.loc 1 466 0
+ 1028 0156 1D4A     		ldr	r2, .L79+12
+ 1029 0158 1D4B     		ldr	r3, .L79+16
+ 1030 015a 1A60     		str	r2, [r3]
+ 469:main.c        ****                         }
+ 1031              		.loc 1 469 0
+ 1032 015c 0022     		movs	r2, #0
+ 1033 015e 184B     		ldr	r3, .L79
+ 1034 0160 1A70     		strb	r2, [r3]
+ 408:main.c        **** 
+ 1035              		.loc 1 408 0
+ 1036 0162 0424     		movs	r4, #4
+ 1037 0164 61E7     		b	.L53
+ 1038              	.L72:
+ 475:main.c        ****                         
+ 1039              		.loc 1 475 0
+ 1040 0166 0020     		movs	r0, #0
+ 1041 0168 FFF7FEFF 		bl	Red_LED_Write
+ 1042              	.LVL109:
+ 478:main.c        ****                     }
+ 1043              		.loc 1 478 0
+ 1044 016c 0027     		movs	r7, #0
+ 408:main.c        **** 
+ 1045              		.loc 1 408 0
+ 1046 016e 0424     		movs	r4, #4
+ 1047 0170 5BE7     		b	.L53
+ 1048              	.LVL110:
+ 1049              	.L68:
+ 485:main.c        **** 
+ 1050              		.loc 1 485 0
+ 1051 0172 0320     		movs	r0, #3
+ 1052 0174 FFF7FEFF 		bl	CapSense_ProcessWidget
+ 1053              	.LVL111:
+ 488:main.c        ****                     {
+ 1054              		.loc 1 488 0
+ 1055 0178 0320     		movs	r0, #3
+ 1056 017a FFF7FEFF 		bl	CapSense_IsWidgetActive
+ 1057              	.LVL112:
+ 1058 017e 0028     		cmp	r0, #0
+ 1059 0180 00D1     		bne	.LCB925
+ 1060 0182 51E7     		b	.L78	@long jump
+ 1061              	.LCB925:
+ 491:main.c        **** 
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 41
+
+
+ 1062              		.loc 1 491 0
+ 1063 0184 C822     		movs	r2, #200
+ 1064 0186 9200     		lsls	r2, r2, #2
+ 1065 0188 114B     		ldr	r3, .L79+16
+ 1066 018a 1A60     		str	r2, [r3]
+ 1067              	.LVL113:
+ 497:main.c        **** 
+ 1068              		.loc 1 497 0
+ 1069 018c 0122     		movs	r2, #1
+ 1070 018e 0C4B     		ldr	r3, .L79
+ 1071 0190 1A70     		strb	r2, [r3]
+ 1072              	.LVL114:
+ 500:main.c        **** 
+ 1073              		.loc 1 500 0
+ 1074 0192 0026     		movs	r6, #0
+ 494:main.c        **** 
+ 1075              		.loc 1 494 0
+ 1076 0194 0027     		movs	r7, #0
+ 503:main.c        ****                     }
+ 1077              		.loc 1 503 0
+ 1078 0196 0124     		movs	r4, #1
+ 1079 0198 47E7     		b	.L53
+ 1080              	.LVL115:
+ 1081              	.L59:
+ 511:main.c        ****                 
+ 1082              		.loc 1 511 0
+ 1083 019a FFF7FEFF 		bl	enterDeepSleepLowPowerMode
+ 1084              	.LVL116:
+ 518:main.c        ****                 {                    
+ 1085              		.loc 1 518 0
+ 1086 019e 0D4B     		ldr	r3, .L79+20
+ 1087 01a0 1B78     		ldrb	r3, [r3]
+ 1088 01a2 002B     		cmp	r3, #0
+ 1089 01a4 00D1     		bne	.LCB952
+ 1090 01a6 40E7     		b	.L53	@long jump
+ 1091              	.LCB952:
+ 1092              	.LVL117:
+ 523:main.c        ****                     
+ 1093              		.loc 1 523 0
+ 1094 01a8 0022     		movs	r2, #0
+ 1095 01aa 0A4B     		ldr	r3, .L79+20
+ 1096 01ac 1A70     		strb	r2, [r3]
+ 526:main.c        ****                 }
+ 1097              		.loc 1 526 0
+ 1098 01ae FFF7FEFF 		bl	CalibrateWdtMatchValue
+ 1099              	.LVL118:
+ 521:main.c        ****                     
+ 1100              		.loc 1 521 0
+ 1101 01b2 0124     		movs	r4, #1
+ 1102 01b4 39E7     		b	.L53
+ 1103              	.LVL119:
+ 1104              	.L54:
+ 533:main.c        ****             break;
+ 1105              		.loc 1 533 0 discriminator 1
+ 1106 01b6 0020     		movs	r0, #0
+ 1107 01b8 FFF7FEFF 		bl	CyHalt
+ 1108              	.LVL120:
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 42
+
+
+ 534:main.c        ****         }
+ 1109              		.loc 1 534 0 discriminator 1
+ 1110 01bc 35E7     		b	.L53
+ 1111              	.L80:
+ 1112 01be C046     		.align	2
+ 1113              	.L79:
+ 1114 01c0 00000000 		.word	deviceScanMode
+ 1115 01c4 00000000 		.word	fingerStatus
+ 1116 01c8 00000000 		.word	touchPosition
+ 1117 01cc 70170000 		.word	6000
+ 1118 01d0 00000000 		.word	.LANCHOR0
+ 1119 01d4 00000000 		.word	.LANCHOR1
+ 1120              		.cfi_endproc
+ 1121              	.LFE33:
+ 1122              		.size	main, .-main
+ 1123              		.global	wdtMatchValue
+ 1124              		.global	wdtInterruptOccured
+ 1125              		.comm	ezI2cBuffer,16,4
+ 1126              		.comm	mouseClickData,1,1
+ 1127              		.comm	xyDirectionData,1,1
+ 1128              		.comm	diffPosition,4,4
+ 1129              		.comm	prevTouchPosition,4,4
+ 1130              		.comm	touchPosition,4,4
+ 1131              		.comm	fingerStatus,2,2
+ 1132              		.comm	deviceScanMode,1,1
+ 1133              		.data
+ 1134              		.align	2
+ 1135              		.set	.LANCHOR0,. + 0
+ 1136              		.type	wdtMatchValue, %object
+ 1137              		.size	wdtMatchValue, 4
+ 1138              	wdtMatchValue:
+ 1139 0000 20030000 		.word	800
+ 1140              		.bss
+ 1141              		.set	.LANCHOR1,. + 0
+ 1142              		.type	wdtInterruptOccured, %object
+ 1143              		.size	wdtInterruptOccured, 1
+ 1144              	wdtInterruptOccured:
+ 1145 0000 00       		.space	1
+ 1146              		.type	prevfingerStatus.5892, %object
+ 1147              		.size	prevfingerStatus.5892, 1
+ 1148              	prevfingerStatus.5892:
+ 1149 0001 00       		.space	1
+ 1150              		.type	prevLeftClick.5888, %object
+ 1151              		.size	prevLeftClick.5888, 1
+ 1152              	prevLeftClick.5888:
+ 1153 0002 00       		.space	1
+ 1154              		.type	prevRightClick.5890, %object
+ 1155              		.size	prevRightClick.5890, 1
+ 1156              	prevRightClick.5890:
+ 1157 0003 00       		.space	1
+ 1158              		.type	resetDone.5902, %object
+ 1159              		.size	resetDone.5902, 1
+ 1160              	resetDone.5902:
+ 1161 0004 00       		.space	1
+ 1162              		.text
+ 1163              	.Letext0:
+ 1164              		.file 2 "Generated_Source\\PSoC4/cytypes.h"
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 43
+
+
+ 1165              		.file 3 "Generated_Source\\PSoC4/CyLFClk.h"
+ 1166              		.file 4 "Generated_Source\\PSoC4/CapSense_Control.h"
+ 1167              		.file 5 "Generated_Source\\PSoC4/CapSense_Structure.h"
+ 1168              		.file 6 "Generated_Source\\PSoC4/EZI2C.h"
+ 1169              		.file 7 "Generated_Source\\PSoC4/EZI2C_EZI2C.h"
+ 1170              		.file 8 "Generated_Source\\PSoC4/CyLib.h"
+ 1171              		.file 9 "Generated_Source\\PSoC4/cyPm.h"
+ 1172              		.file 10 "Generated_Source\\PSoC4/CapSense_Sensing.h"
+ 1173              		.file 11 "Generated_Source\\PSoC4/CapSense_SensingCSD_LL.h"
+ 1174              		.file 12 "Generated_Source\\PSoC4/Red_LED.h"
+ 1175              		.section	.debug_info,"",%progbits
+ 1176              	.Ldebug_info0:
+ 1177 0000 77080000 		.4byte	0x877
+ 1178 0004 0400     		.2byte	0x4
+ 1179 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 1180 000a 04       		.byte	0x4
+ 1181 000b 01       		.uleb128 0x1
+ 1182 000c E9000000 		.4byte	.LASF92
+ 1183 0010 0C       		.byte	0xc
+ 1184 0011 6F050000 		.4byte	.LASF93
+ 1185 0015 A8020000 		.4byte	.LASF94
+ 1186 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 1187 001d 00000000 		.4byte	0
+ 1188 0021 00000000 		.4byte	.Ldebug_line0
+ 1189 0025 02       		.uleb128 0x2
+ 1190 0026 01       		.byte	0x1
+ 1191 0027 06       		.byte	0x6
+ 1192 0028 2B020000 		.4byte	.LASF0
+ 1193 002c 02       		.uleb128 0x2
+ 1194 002d 01       		.byte	0x1
+ 1195 002e 08       		.byte	0x8
+ 1196 002f 6D030000 		.4byte	.LASF1
+ 1197 0033 02       		.uleb128 0x2
+ 1198 0034 02       		.byte	0x2
+ 1199 0035 05       		.byte	0x5
+ 1200 0036 A6000000 		.4byte	.LASF2
+ 1201 003a 02       		.uleb128 0x2
+ 1202 003b 02       		.byte	0x2
+ 1203 003c 07       		.byte	0x7
+ 1204 003d 97040000 		.4byte	.LASF3
+ 1205 0041 02       		.uleb128 0x2
+ 1206 0042 04       		.byte	0x4
+ 1207 0043 05       		.byte	0x5
+ 1208 0044 C6040000 		.4byte	.LASF4
+ 1209 0048 02       		.uleb128 0x2
+ 1210 0049 04       		.byte	0x4
+ 1211 004a 07       		.byte	0x7
+ 1212 004b 76050000 		.4byte	.LASF5
+ 1213 004f 02       		.uleb128 0x2
+ 1214 0050 08       		.byte	0x8
+ 1215 0051 05       		.byte	0x5
+ 1216 0052 80020000 		.4byte	.LASF6
+ 1217 0056 02       		.uleb128 0x2
+ 1218 0057 08       		.byte	0x8
+ 1219 0058 07       		.byte	0x7
+ 1220 0059 0B040000 		.4byte	.LASF7
+ 1221 005d 03       		.uleb128 0x3
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 44
+
+
+ 1222 005e 04       		.byte	0x4
+ 1223 005f 05       		.byte	0x5
+ 1224 0060 696E7400 		.ascii	"int\000"
+ 1225 0064 02       		.uleb128 0x2
+ 1226 0065 04       		.byte	0x4
+ 1227 0066 07       		.byte	0x7
+ 1228 0067 4D040000 		.4byte	.LASF8
+ 1229 006b 04       		.uleb128 0x4
+ 1230 006c 07020000 		.4byte	.LASF9
+ 1231 0070 02       		.byte	0x2
+ 1232 0071 FC01     		.2byte	0x1fc
+ 1233 0073 2C000000 		.4byte	0x2c
+ 1234 0077 04       		.uleb128 0x4
+ 1235 0078 45050000 		.4byte	.LASF10
+ 1236 007c 02       		.byte	0x2
+ 1237 007d FD01     		.2byte	0x1fd
+ 1238 007f 3A000000 		.4byte	0x3a
+ 1239 0083 04       		.uleb128 0x4
+ 1240 0084 68050000 		.4byte	.LASF11
+ 1241 0088 02       		.byte	0x2
+ 1242 0089 FE01     		.2byte	0x1fe
+ 1243 008b 48000000 		.4byte	0x48
+ 1244 008f 02       		.uleb128 0x2
+ 1245 0090 04       		.byte	0x4
+ 1246 0091 04       		.byte	0x4
+ 1247 0092 6C020000 		.4byte	.LASF12
+ 1248 0096 02       		.uleb128 0x2
+ 1249 0097 08       		.byte	0x8
+ 1250 0098 04       		.byte	0x4
+ 1251 0099 88050000 		.4byte	.LASF13
+ 1252 009d 02       		.uleb128 0x2
+ 1253 009e 01       		.byte	0x1
+ 1254 009f 08       		.byte	0x8
+ 1255 00a0 BB040000 		.4byte	.LASF14
+ 1256 00a4 05       		.uleb128 0x5
+ 1257 00a5 6B000000 		.4byte	0x6b
+ 1258 00a9 05       		.uleb128 0x5
+ 1259 00aa 83000000 		.4byte	0x83
+ 1260 00ae 02       		.uleb128 0x2
+ 1261 00af 08       		.byte	0x8
+ 1262 00b0 04       		.byte	0x4
+ 1263 00b1 B4030000 		.4byte	.LASF15
+ 1264 00b5 02       		.uleb128 0x2
+ 1265 00b6 04       		.byte	0x4
+ 1266 00b7 07       		.byte	0x7
+ 1267 00b8 C0000000 		.4byte	.LASF16
+ 1268 00bc 06       		.uleb128 0x6
+ 1269 00bd 01       		.byte	0x1
+ 1270 00be 2C000000 		.4byte	0x2c
+ 1271 00c2 01       		.byte	0x1
+ 1272 00c3 8D       		.byte	0x8d
+ 1273 00c4 E1000000 		.4byte	0xe1
+ 1274 00c8 07       		.uleb128 0x7
+ 1275 00c9 B6010000 		.4byte	.LASF17
+ 1276 00cd 01       		.byte	0x1
+ 1277 00ce 07       		.uleb128 0x7
+ 1278 00cf F4040000 		.4byte	.LASF18
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 45
+
+
+ 1279 00d3 02       		.byte	0x2
+ 1280 00d4 07       		.uleb128 0x7
+ 1281 00d5 9B030000 		.4byte	.LASF19
+ 1282 00d9 03       		.byte	0x3
+ 1283 00da 07       		.uleb128 0x7
+ 1284 00db 9B050000 		.4byte	.LASF20
+ 1285 00df 04       		.byte	0x4
+ 1286 00e0 00       		.byte	0
+ 1287 00e1 08       		.uleb128 0x8
+ 1288 00e2 AE060000 		.4byte	.LASF21
+ 1289 00e6 01       		.byte	0x1
+ 1290 00e7 92       		.byte	0x92
+ 1291 00e8 BC000000 		.4byte	0xbc
+ 1292 00ec 06       		.uleb128 0x6
+ 1293 00ed 01       		.byte	0x1
+ 1294 00ee 2C000000 		.4byte	0x2c
+ 1295 00f2 01       		.byte	0x1
+ 1296 00f3 96       		.byte	0x96
+ 1297 00f4 05010000 		.4byte	0x105
+ 1298 00f8 07       		.uleb128 0x7
+ 1299 00f9 2A000000 		.4byte	.LASF22
+ 1300 00fd 00       		.byte	0
+ 1301 00fe 07       		.uleb128 0x7
+ 1302 00ff 4B060000 		.4byte	.LASF23
+ 1303 0103 01       		.byte	0x1
+ 1304 0104 00       		.byte	0
+ 1305 0105 08       		.uleb128 0x8
+ 1306 0106 34060000 		.4byte	.LASF24
+ 1307 010a 01       		.byte	0x1
+ 1308 010b 99       		.byte	0x99
+ 1309 010c EC000000 		.4byte	0xec
+ 1310 0110 09       		.uleb128 0x9
+ 1311 0111 B0000000 		.4byte	.LASF25
+ 1312 0115 01       		.byte	0x1
+ 1313 0116 6703     		.2byte	0x367
+ 1314 0118 00000000 		.4byte	.LFB38
+ 1315 011c 24000000 		.4byte	.LFE38-.LFB38
+ 1316 0120 01       		.uleb128 0x1
+ 1317 0121 9C       		.byte	0x9c
+ 1318 0122 42010000 		.4byte	0x142
+ 1319 0126 0A       		.uleb128 0xa
+ 1320 0127 06000000 		.4byte	.LVL0
+ 1321 012b 2C070000 		.4byte	0x72c
+ 1322 012f 0A       		.uleb128 0xa
+ 1323 0130 0A000000 		.4byte	.LVL1
+ 1324 0134 37070000 		.4byte	0x737
+ 1325 0138 0A       		.uleb128 0xa
+ 1326 0139 14000000 		.4byte	.LVL2
+ 1327 013d 42070000 		.4byte	0x742
+ 1328 0141 00       		.byte	0
+ 1329 0142 09       		.uleb128 0x9
+ 1330 0143 4C050000 		.4byte	.LASF26
+ 1331 0147 01       		.byte	0x1
+ 1332 0148 3202     		.2byte	0x232
+ 1333 014a 00000000 		.4byte	.LFB34
+ 1334 014e 2C000000 		.4byte	.LFE34-.LFB34
+ 1335 0152 01       		.uleb128 0x1
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 46
+
+
+ 1336 0153 9C       		.byte	0x9c
+ 1337 0154 70010000 		.4byte	0x170
+ 1338 0158 0B       		.uleb128 0xb
+ 1339 0159 96000000 		.4byte	.LASF28
+ 1340 015d 01       		.byte	0x1
+ 1341 015e 3502     		.2byte	0x235
+ 1342 0160 83000000 		.4byte	0x83
+ 1343 0164 FFFF     		.2byte	0xffff
+ 1344 0166 0A       		.uleb128 0xa
+ 1345 0167 06000000 		.4byte	.LVL3
+ 1346 016b 4D070000 		.4byte	0x74d
+ 1347 016f 00       		.byte	0
+ 1348 0170 09       		.uleb128 0x9
+ 1349 0171 0C060000 		.4byte	.LASF27
+ 1350 0175 01       		.byte	0x1
+ 1351 0176 5E02     		.2byte	0x25e
+ 1352 0178 00000000 		.4byte	.LFB35
+ 1353 017c 04010000 		.4byte	.LFE35-.LFB35
+ 1354 0180 01       		.uleb128 0x1
+ 1355 0181 9C       		.byte	0x9c
+ 1356 0182 22020000 		.4byte	0x222
+ 1357 0186 0C       		.uleb128 0xc
+ 1358 0187 C2010000 		.4byte	.LASF29
+ 1359 018b 01       		.byte	0x1
+ 1360 018c 6102     		.2byte	0x261
+ 1361 018e 6B000000 		.4byte	0x6b
+ 1362 0192 05       		.uleb128 0x5
+ 1363 0193 03       		.byte	0x3
+ 1364 0194 02000000 		.4byte	prevLeftClick.5888
+ 1365 0198 0D       		.uleb128 0xd
+ 1366 0199 0D020000 		.4byte	.LASF30
+ 1367 019d 01       		.byte	0x1
+ 1368 019e 6202     		.2byte	0x262
+ 1369 01a0 6B000000 		.4byte	0x6b
+ 1370 01a4 00000000 		.4byte	.LLST0
+ 1371 01a8 0C       		.uleb128 0xc
+ 1372 01a9 18050000 		.4byte	.LASF31
+ 1373 01ad 01       		.byte	0x1
+ 1374 01ae 6502     		.2byte	0x265
+ 1375 01b0 6B000000 		.4byte	0x6b
+ 1376 01b4 05       		.uleb128 0x5
+ 1377 01b5 03       		.byte	0x3
+ 1378 01b6 03000000 		.4byte	prevRightClick.5890
+ 1379 01ba 0D       		.uleb128 0xd
+ 1380 01bb 7B030000 		.4byte	.LASF32
+ 1381 01bf 01       		.byte	0x1
+ 1382 01c0 6602     		.2byte	0x266
+ 1383 01c2 6B000000 		.4byte	0x6b
+ 1384 01c6 2E000000 		.4byte	.LLST1
+ 1385 01ca 0C       		.uleb128 0xc
+ 1386 01cb D8000000 		.4byte	.LASF33
+ 1387 01cf 01       		.byte	0x1
+ 1388 01d0 6902     		.2byte	0x269
+ 1389 01d2 6B000000 		.4byte	0x6b
+ 1390 01d6 05       		.uleb128 0x5
+ 1391 01d7 03       		.byte	0x3
+ 1392 01d8 01000000 		.4byte	prevfingerStatus.5892
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 47
+
+
+ 1393 01dc 0D       		.uleb128 0xd
+ 1394 01dd CF040000 		.4byte	.LASF34
+ 1395 01e1 01       		.byte	0x1
+ 1396 01e2 6A02     		.2byte	0x26a
+ 1397 01e4 6B000000 		.4byte	0x6b
+ 1398 01e8 4D000000 		.4byte	.LLST2
+ 1399 01ec 0E       		.uleb128 0xe
+ 1400 01ed 0E000000 		.4byte	.LVL6
+ 1401 01f1 58070000 		.4byte	0x758
+ 1402 01f5 FF010000 		.4byte	0x1ff
+ 1403 01f9 0F       		.uleb128 0xf
+ 1404 01fa 01       		.uleb128 0x1
+ 1405 01fb 50       		.byte	0x50
+ 1406 01fc 01       		.uleb128 0x1
+ 1407 01fd 30       		.byte	0x30
+ 1408 01fe 00       		.byte	0
+ 1409 01ff 0E       		.uleb128 0xe
+ 1410 0200 9C000000 		.4byte	.LVL8
+ 1411 0204 58070000 		.4byte	0x758
+ 1412 0208 12020000 		.4byte	0x212
+ 1413 020c 0F       		.uleb128 0xf
+ 1414 020d 01       		.uleb128 0x1
+ 1415 020e 50       		.byte	0x50
+ 1416 020f 01       		.uleb128 0x1
+ 1417 0210 31       		.byte	0x31
+ 1418 0211 00       		.byte	0
+ 1419 0212 10       		.uleb128 0x10
+ 1420 0213 A4000000 		.4byte	.LVL10
+ 1421 0217 58070000 		.4byte	0x758
+ 1422 021b 0F       		.uleb128 0xf
+ 1423 021c 01       		.uleb128 0x1
+ 1424 021d 50       		.byte	0x50
+ 1425 021e 01       		.uleb128 0x1
+ 1426 021f 32       		.byte	0x32
+ 1427 0220 00       		.byte	0
+ 1428 0221 00       		.byte	0
+ 1429 0222 09       		.uleb128 0x9
+ 1430 0223 22000000 		.4byte	.LASF35
+ 1431 0227 01       		.byte	0x1
+ 1432 0228 DC02     		.2byte	0x2dc
+ 1433 022a 00000000 		.4byte	.LFB36
+ 1434 022e 20000000 		.4byte	.LFE36-.LFB36
+ 1435 0232 01       		.uleb128 0x1
+ 1436 0233 9C       		.byte	0x9c
+ 1437 0234 5F020000 		.4byte	0x25f
+ 1438 0238 0A       		.uleb128 0xa
+ 1439 0239 06000000 		.4byte	.LVL14
+ 1440 023d 64070000 		.4byte	0x764
+ 1441 0241 10       		.uleb128 0x10
+ 1442 0242 18000000 		.4byte	.LVL15
+ 1443 0246 6F070000 		.4byte	0x76f
+ 1444 024a 0F       		.uleb128 0xf
+ 1445 024b 01       		.uleb128 0x1
+ 1446 024c 50       		.byte	0x50
+ 1447 024d 01       		.uleb128 0x1
+ 1448 024e 40       		.byte	0x40
+ 1449 024f 0F       		.uleb128 0xf
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 48
+
+
+ 1450 0250 01       		.uleb128 0x1
+ 1451 0251 51       		.byte	0x51
+ 1452 0252 01       		.uleb128 0x1
+ 1453 0253 32       		.byte	0x32
+ 1454 0254 0F       		.uleb128 0xf
+ 1455 0255 01       		.uleb128 0x1
+ 1456 0256 52       		.byte	0x52
+ 1457 0257 05       		.uleb128 0x5
+ 1458 0258 03       		.byte	0x3
+ 1459 0259 00000000 		.4byte	ezI2cBuffer
+ 1460 025d 00       		.byte	0
+ 1461 025e 00       		.byte	0
+ 1462 025f 09       		.uleb128 0x9
+ 1463 0260 5C020000 		.4byte	.LASF36
+ 1464 0264 01       		.byte	0x1
+ 1465 0265 0603     		.2byte	0x306
+ 1466 0267 00000000 		.4byte	.LFB37
+ 1467 026b B8000000 		.4byte	.LFE37-.LFB37
+ 1468 026f 01       		.uleb128 0x1
+ 1469 0270 9C       		.byte	0x9c
+ 1470 0271 A8020000 		.4byte	0x2a8
+ 1471 0275 0D       		.uleb128 0xd
+ 1472 0276 DB050000 		.4byte	.LASF37
+ 1473 027a 01       		.byte	0x1
+ 1474 027b 0803     		.2byte	0x308
+ 1475 027d 77000000 		.4byte	0x77
+ 1476 0281 7B000000 		.4byte	.LLST3
+ 1477 0285 0D       		.uleb128 0xd
+ 1478 0286 D0010000 		.4byte	.LASF38
+ 1479 028a 01       		.byte	0x1
+ 1480 028b 0903     		.2byte	0x309
+ 1481 028d 6B000000 		.4byte	0x6b
+ 1482 0291 B1000000 		.4byte	.LLST4
+ 1483 0295 0C       		.uleb128 0xc
+ 1484 0296 EE030000 		.4byte	.LASF39
+ 1485 029a 01       		.byte	0x1
+ 1486 029b 0A03     		.2byte	0x30a
+ 1487 029d 6B000000 		.4byte	0x6b
+ 1488 02a1 05       		.uleb128 0x5
+ 1489 02a2 03       		.byte	0x3
+ 1490 02a3 04000000 		.4byte	resetDone.5902
+ 1491 02a7 00       		.byte	0
+ 1492 02a8 09       		.uleb128 0x9
+ 1493 02a9 EC010000 		.4byte	.LASF40
+ 1494 02ad 01       		.byte	0x1
+ 1495 02ae B203     		.2byte	0x3b2
+ 1496 02b0 00000000 		.4byte	.LFB40
+ 1497 02b4 2C000000 		.4byte	.LFE40-.LFB40
+ 1498 02b8 01       		.uleb128 0x1
+ 1499 02b9 9C       		.byte	0x9c
+ 1500 02ba 1E030000 		.4byte	0x31e
+ 1501 02be 0D       		.uleb128 0xd
+ 1502 02bf 59050000 		.4byte	.LASF41
+ 1503 02c3 01       		.byte	0x1
+ 1504 02c4 BA03     		.2byte	0x3ba
+ 1505 02c6 83000000 		.4byte	0x83
+ 1506 02ca 1E010000 		.4byte	.LLST5
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 49
+
+
+ 1507 02ce 0A       		.uleb128 0xa
+ 1508 02cf 06000000 		.4byte	.LVL37
+ 1509 02d3 7A070000 		.4byte	0x77a
+ 1510 02d7 0A       		.uleb128 0xa
+ 1511 02d8 0C000000 		.4byte	.LVL39
+ 1512 02dc 85070000 		.4byte	0x785
+ 1513 02e0 0A       		.uleb128 0xa
+ 1514 02e1 14000000 		.4byte	.LVL40
+ 1515 02e5 90070000 		.4byte	0x790
+ 1516 02e9 0A       		.uleb128 0xa
+ 1517 02ea 18000000 		.4byte	.LVL41
+ 1518 02ee 9B070000 		.4byte	0x79b
+ 1519 02f2 0A       		.uleb128 0xa
+ 1520 02f3 1C000000 		.4byte	.LVL42
+ 1521 02f7 A6070000 		.4byte	0x7a6
+ 1522 02fb 0A       		.uleb128 0xa
+ 1523 02fc 20000000 		.4byte	.LVL43
+ 1524 0300 B1070000 		.4byte	0x7b1
+ 1525 0304 0A       		.uleb128 0xa
+ 1526 0305 24000000 		.4byte	.LVL44
+ 1527 0309 BC070000 		.4byte	0x7bc
+ 1528 030d 10       		.uleb128 0x10
+ 1529 030e 2A000000 		.4byte	.LVL45
+ 1530 0312 C7070000 		.4byte	0x7c7
+ 1531 0316 0F       		.uleb128 0xf
+ 1532 0317 01       		.uleb128 0x1
+ 1533 0318 50       		.byte	0x50
+ 1534 0319 02       		.uleb128 0x2
+ 1535 031a 74       		.byte	0x74
+ 1536 031b 00       		.sleb128 0
+ 1537 031c 00       		.byte	0
+ 1538 031d 00       		.byte	0
+ 1539 031e 11       		.uleb128 0x11
+ 1540 031f 27050000 		.4byte	.LASF47
+ 1541 0323 01       		.byte	0x1
+ 1542 0324 E903     		.2byte	0x3e9
+ 1543 0326 5E030000 		.4byte	0x35e
+ 1544 032a 00000000 		.4byte	.LFB41
+ 1545 032e 2E000000 		.4byte	.LFE41-.LFB41
+ 1546 0332 01       		.uleb128 0x1
+ 1547 0333 9C       		.byte	0x9c
+ 1548 0334 5E030000 		.4byte	0x35e
+ 1549 0338 0E       		.uleb128 0xe
+ 1550 0339 08000000 		.4byte	.LVL47
+ 1551 033d 58070000 		.4byte	0x758
+ 1552 0341 4B030000 		.4byte	0x34b
+ 1553 0345 0F       		.uleb128 0xf
+ 1554 0346 01       		.uleb128 0x1
+ 1555 0347 50       		.byte	0x50
+ 1556 0348 01       		.uleb128 0x1
+ 1557 0349 30       		.byte	0x30
+ 1558 034a 00       		.byte	0
+ 1559 034b 0A       		.uleb128 0xa
+ 1560 034c 12000000 		.4byte	.LVL48
+ 1561 0350 58070000 		.4byte	0x758
+ 1562 0354 0A       		.uleb128 0xa
+ 1563 0355 1C000000 		.4byte	.LVL49
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 50
+
+
+ 1564 0359 58070000 		.4byte	0x758
+ 1565 035d 00       		.byte	0
+ 1566 035e 02       		.uleb128 0x2
+ 1567 035f 01       		.byte	0x1
+ 1568 0360 02       		.byte	0x2
+ 1569 0361 C0040000 		.4byte	.LASF42
+ 1570 0365 09       		.uleb128 0x9
+ 1571 0366 7F060000 		.4byte	.LASF43
+ 1572 036a 01       		.byte	0x1
+ 1573 036b 0C04     		.2byte	0x40c
+ 1574 036d 00000000 		.4byte	.LFB42
+ 1575 0371 38000000 		.4byte	.LFE42-.LFB42
+ 1576 0375 01       		.uleb128 0x1
+ 1577 0376 9C       		.byte	0x9c
+ 1578 0377 AB030000 		.4byte	0x3ab
+ 1579 037b 0C       		.uleb128 0xc
+ 1580 037c 8D030000 		.4byte	.LASF44
+ 1581 0380 01       		.byte	0x1
+ 1582 0381 0F04     		.2byte	0x40f
+ 1583 0383 83000000 		.4byte	0x83
+ 1584 0387 02       		.uleb128 0x2
+ 1585 0388 91       		.byte	0x91
+ 1586 0389 74       		.sleb128 -12
+ 1587 038a 0D       		.uleb128 0xd
+ 1588 038b 8A040000 		.4byte	.LASF45
+ 1589 038f 01       		.byte	0x1
+ 1590 0390 1204     		.2byte	0x412
+ 1591 0392 83000000 		.4byte	0x83
+ 1592 0396 42010000 		.4byte	.LLST6
+ 1593 039a 10       		.uleb128 0x10
+ 1594 039b 1E000000 		.4byte	.LVL52
+ 1595 039f D2070000 		.4byte	0x7d2
+ 1596 03a3 0F       		.uleb128 0xf
+ 1597 03a4 01       		.uleb128 0x1
+ 1598 03a5 51       		.byte	0x51
+ 1599 03a6 02       		.uleb128 0x2
+ 1600 03a7 91       		.byte	0x91
+ 1601 03a8 74       		.sleb128 -12
+ 1602 03a9 00       		.byte	0
+ 1603 03aa 00       		.byte	0
+ 1604 03ab 09       		.uleb128 0x9
+ 1605 03ac F3050000 		.4byte	.LASF46
+ 1606 03b0 01       		.byte	0x1
+ 1607 03b1 8903     		.2byte	0x389
+ 1608 03b3 00000000 		.4byte	.LFB39
+ 1609 03b7 30000000 		.4byte	.LFE39-.LFB39
+ 1610 03bb 01       		.uleb128 0x1
+ 1611 03bc 9C       		.byte	0x9c
+ 1612 03bd 11040000 		.4byte	0x411
+ 1613 03c1 0E       		.uleb128 0xe
+ 1614 03c2 0A000000 		.4byte	.LVL53
+ 1615 03c6 DD070000 		.4byte	0x7dd
+ 1616 03ca DD030000 		.4byte	0x3dd
+ 1617 03ce 0F       		.uleb128 0xf
+ 1618 03cf 01       		.uleb128 0x1
+ 1619 03d0 50       		.byte	0x50
+ 1620 03d1 01       		.uleb128 0x1
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 51
+
+
+ 1621 03d2 36       		.byte	0x36
+ 1622 03d3 0F       		.uleb128 0xf
+ 1623 03d4 01       		.uleb128 0x1
+ 1624 03d5 51       		.byte	0x51
+ 1625 03d6 05       		.uleb128 0x5
+ 1626 03d7 03       		.byte	0x3
+ 1627 03d8 00000000 		.4byte	Timer_Interrupt
+ 1628 03dc 00       		.byte	0
+ 1629 03dd 0A       		.uleb128 0xa
+ 1630 03de 0E000000 		.4byte	.LVL54
+ 1631 03e2 65030000 		.4byte	0x365
+ 1632 03e6 0A       		.uleb128 0xa
+ 1633 03e7 12000000 		.4byte	.LVL55
+ 1634 03eb E8070000 		.4byte	0x7e8
+ 1635 03ef 0A       		.uleb128 0xa
+ 1636 03f0 1C000000 		.4byte	.LVL56
+ 1637 03f4 42070000 		.4byte	0x742
+ 1638 03f8 0A       		.uleb128 0xa
+ 1639 03f9 20000000 		.4byte	.LVL57
+ 1640 03fd F3070000 		.4byte	0x7f3
+ 1641 0401 10       		.uleb128 0x10
+ 1642 0402 26000000 		.4byte	.LVL58
+ 1643 0406 FE070000 		.4byte	0x7fe
+ 1644 040a 0F       		.uleb128 0xf
+ 1645 040b 01       		.uleb128 0x1
+ 1646 040c 50       		.byte	0x50
+ 1647 040d 01       		.uleb128 0x1
+ 1648 040e 36       		.byte	0x36
+ 1649 040f 00       		.byte	0
+ 1650 0410 00       		.byte	0
+ 1651 0411 12       		.uleb128 0x12
+ 1652 0412 7B010000 		.4byte	.LASF48
+ 1653 0416 01       		.byte	0x1
+ 1654 0417 F9       		.byte	0xf9
+ 1655 0418 5D000000 		.4byte	0x5d
+ 1656 041c 00000000 		.4byte	.LFB33
+ 1657 0420 D8010000 		.4byte	.LFE33-.LFB33
+ 1658 0424 01       		.uleb128 0x1
+ 1659 0425 9C       		.byte	0x9c
+ 1660 0426 5D060000 		.4byte	0x65d
+ 1661 042a 13       		.uleb128 0x13
+ 1662 042b 0B050000 		.4byte	.LASF49
+ 1663 042f 01       		.byte	0x1
+ 1664 0430 FF       		.byte	0xff
+ 1665 0431 E1000000 		.4byte	0xe1
+ 1666 0435 61010000 		.4byte	.LLST7
+ 1667 0439 0D       		.uleb128 0xd
+ 1668 043a 70060000 		.4byte	.LASF50
+ 1669 043e 01       		.byte	0x1
+ 1670 043f 0201     		.2byte	0x102
+ 1671 0441 83000000 		.4byte	0x83
+ 1672 0445 F3010000 		.4byte	.LLST8
+ 1673 0449 0D       		.uleb128 0xd
+ 1674 044a BD050000 		.4byte	.LASF51
+ 1675 044e 01       		.byte	0x1
+ 1676 044f 0501     		.2byte	0x105
+ 1677 0451 6B000000 		.4byte	0x6b
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 52
+
+
+ 1678 0455 40020000 		.4byte	.LLST9
+ 1679 0459 0D       		.uleb128 0xd
+ 1680 045a 96000000 		.4byte	.LASF28
+ 1681 045e 01       		.byte	0x1
+ 1682 045f 0801     		.2byte	0x108
+ 1683 0461 83000000 		.4byte	0x83
+ 1684 0465 D1020000 		.4byte	.LLST10
+ 1685 0469 0D       		.uleb128 0xd
+ 1686 046a 59050000 		.4byte	.LASF41
+ 1687 046e 01       		.byte	0x1
+ 1688 046f 0B01     		.2byte	0x10b
+ 1689 0471 83000000 		.4byte	0x83
+ 1690 0475 E4020000 		.4byte	.LLST11
+ 1691 0479 0A       		.uleb128 0xa
+ 1692 047a 0E000000 		.4byte	.LVL60
+ 1693 047e 22020000 		.4byte	0x222
+ 1694 0482 0E       		.uleb128 0xe
+ 1695 0483 14000000 		.4byte	.LVL61
+ 1696 0487 09080000 		.4byte	0x809
+ 1697 048b 96040000 		.4byte	0x496
+ 1698 048f 0F       		.uleb128 0xf
+ 1699 0490 01       		.uleb128 0x1
+ 1700 0491 50       		.byte	0x50
+ 1701 0492 02       		.uleb128 0x2
+ 1702 0493 08       		.byte	0x8
+ 1703 0494 64       		.byte	0x64
+ 1704 0495 00       		.byte	0
+ 1705 0496 0A       		.uleb128 0xa
+ 1706 0497 18000000 		.4byte	.LVL62
+ 1707 049b 42010000 		.4byte	0x142
+ 1708 049f 0A       		.uleb128 0xa
+ 1709 04a0 1C000000 		.4byte	.LVL63
+ 1710 04a4 AB030000 		.4byte	0x3ab
+ 1711 04a8 0A       		.uleb128 0xa
+ 1712 04a9 46000000 		.4byte	.LVL66
+ 1713 04ad 14080000 		.4byte	0x814
+ 1714 04b1 0A       		.uleb128 0xa
+ 1715 04b2 5A000000 		.4byte	.LVL67
+ 1716 04b6 1F080000 		.4byte	0x81f
+ 1717 04ba 0E       		.uleb128 0xe
+ 1718 04bb 68000000 		.4byte	.LVL69
+ 1719 04bf 1F080000 		.4byte	0x81f
+ 1720 04c3 CD040000 		.4byte	0x4cd
+ 1721 04c7 0F       		.uleb128 0xf
+ 1722 04c8 01       		.uleb128 0x1
+ 1723 04c9 50       		.byte	0x50
+ 1724 04ca 01       		.uleb128 0x1
+ 1725 04cb 31       		.byte	0x31
+ 1726 04cc 00       		.byte	0
+ 1727 04cd 0E       		.uleb128 0xe
+ 1728 04ce 76000000 		.4byte	.LVL71
+ 1729 04d2 1F080000 		.4byte	0x81f
+ 1730 04d6 E0040000 		.4byte	0x4e0
+ 1731 04da 0F       		.uleb128 0xf
+ 1732 04db 01       		.uleb128 0x1
+ 1733 04dc 50       		.byte	0x50
+ 1734 04dd 01       		.uleb128 0x1
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 53
+
+
+ 1735 04de 32       		.byte	0x32
+ 1736 04df 00       		.byte	0
+ 1737 04e0 0E       		.uleb128 0xe
+ 1738 04e1 7C000000 		.4byte	.LVL72
+ 1739 04e5 58070000 		.4byte	0x758
+ 1740 04e9 F3040000 		.4byte	0x4f3
+ 1741 04ed 0F       		.uleb128 0xf
+ 1742 04ee 01       		.uleb128 0x1
+ 1743 04ef 50       		.byte	0x50
+ 1744 04f0 01       		.uleb128 0x1
+ 1745 04f1 33       		.byte	0x33
+ 1746 04f2 00       		.byte	0
+ 1747 04f3 0A       		.uleb128 0xa
+ 1748 04f4 84000000 		.4byte	.LVL73
+ 1749 04f8 1E030000 		.4byte	0x31e
+ 1750 04fc 0E       		.uleb128 0xe
+ 1751 04fd 92000000 		.4byte	.LVL76
+ 1752 0501 1F080000 		.4byte	0x81f
+ 1753 0505 0F050000 		.4byte	0x50f
+ 1754 0509 0F       		.uleb128 0xf
+ 1755 050a 01       		.uleb128 0x1
+ 1756 050b 50       		.byte	0x50
+ 1757 050c 01       		.uleb128 0x1
+ 1758 050d 33       		.byte	0x33
+ 1759 050e 00       		.byte	0
+ 1760 050f 0E       		.uleb128 0xe
+ 1761 0510 9C000000 		.4byte	.LVL78
+ 1762 0514 1F080000 		.4byte	0x81f
+ 1763 0518 22050000 		.4byte	0x522
+ 1764 051c 0F       		.uleb128 0xf
+ 1765 051d 01       		.uleb128 0x1
+ 1766 051e 50       		.byte	0x50
+ 1767 051f 01       		.uleb128 0x1
+ 1768 0520 33       		.byte	0x33
+ 1769 0521 00       		.byte	0
+ 1770 0522 0A       		.uleb128 0xa
+ 1771 0523 A8000000 		.4byte	.LVL82
+ 1772 0527 2B080000 		.4byte	0x82b
+ 1773 052b 0A       		.uleb128 0xa
+ 1774 052c B0000000 		.4byte	.LVL84
+ 1775 0530 7A070000 		.4byte	0x77a
+ 1776 0534 0A       		.uleb128 0xa
+ 1777 0535 B6000000 		.4byte	.LVL86
+ 1778 0539 14080000 		.4byte	0x814
+ 1779 053d 0A       		.uleb128 0xa
+ 1780 053e BE000000 		.4byte	.LVL87
+ 1781 0542 36080000 		.4byte	0x836
+ 1782 0546 0E       		.uleb128 0xe
+ 1783 0547 DC000000 		.4byte	.LVL93
+ 1784 054b C7070000 		.4byte	0x7c7
+ 1785 054f 5A050000 		.4byte	0x55a
+ 1786 0553 0F       		.uleb128 0xf
+ 1787 0554 01       		.uleb128 0x1
+ 1788 0555 50       		.byte	0x50
+ 1789 0556 02       		.uleb128 0x2
+ 1790 0557 75       		.byte	0x75
+ 1791 0558 00       		.sleb128 0
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 54
+
+
+ 1792 0559 00       		.byte	0
+ 1793 055a 0E       		.uleb128 0xe
+ 1794 055b EC000000 		.4byte	.LVL95
+ 1795 055f 41080000 		.4byte	0x841
+ 1796 0563 6D050000 		.4byte	0x56d
+ 1797 0567 0F       		.uleb128 0xf
+ 1798 0568 01       		.uleb128 0x1
+ 1799 0569 50       		.byte	0x50
+ 1800 056a 01       		.uleb128 0x1
+ 1801 056b 30       		.byte	0x30
+ 1802 056c 00       		.byte	0
+ 1803 056d 0E       		.uleb128 0xe
+ 1804 056e F2000000 		.4byte	.LVL96
+ 1805 0572 41080000 		.4byte	0x841
+ 1806 0576 80050000 		.4byte	0x580
+ 1807 057a 0F       		.uleb128 0xf
+ 1808 057b 01       		.uleb128 0x1
+ 1809 057c 50       		.byte	0x50
+ 1810 057d 01       		.uleb128 0x1
+ 1811 057e 31       		.byte	0x31
+ 1812 057f 00       		.byte	0
+ 1813 0580 0E       		.uleb128 0xe
+ 1814 0581 F8000000 		.4byte	.LVL97
+ 1815 0585 41080000 		.4byte	0x841
+ 1816 0589 93050000 		.4byte	0x593
+ 1817 058d 0F       		.uleb128 0xf
+ 1818 058e 01       		.uleb128 0x1
+ 1819 058f 50       		.byte	0x50
+ 1820 0590 01       		.uleb128 0x1
+ 1821 0591 32       		.byte	0x32
+ 1822 0592 00       		.byte	0
+ 1823 0593 0A       		.uleb128 0xa
+ 1824 0594 FC000000 		.4byte	.LVL98
+ 1825 0598 1E030000 		.4byte	0x31e
+ 1826 059c 0A       		.uleb128 0xa
+ 1827 059d 06010000 		.4byte	.LVL99
+ 1828 05a1 58070000 		.4byte	0x758
+ 1829 05a5 0E       		.uleb128 0xe
+ 1830 05a6 10010000 		.4byte	.LVL100
+ 1831 05aa 41080000 		.4byte	0x841
+ 1832 05ae B8050000 		.4byte	0x5b8
+ 1833 05b2 0F       		.uleb128 0xf
+ 1834 05b3 01       		.uleb128 0x1
+ 1835 05b4 50       		.byte	0x50
+ 1836 05b5 01       		.uleb128 0x1
+ 1837 05b6 33       		.byte	0x33
+ 1838 05b7 00       		.byte	0
+ 1839 05b8 0E       		.uleb128 0xe
+ 1840 05b9 16010000 		.4byte	.LVL101
+ 1841 05bd 58070000 		.4byte	0x758
+ 1842 05c1 CB050000 		.4byte	0x5cb
+ 1843 05c5 0F       		.uleb128 0xf
+ 1844 05c6 01       		.uleb128 0x1
+ 1845 05c7 50       		.byte	0x50
+ 1846 05c8 01       		.uleb128 0x1
+ 1847 05c9 30       		.byte	0x30
+ 1848 05ca 00       		.byte	0
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 55
+
+
+ 1849 05cb 0E       		.uleb128 0xe
+ 1850 05cc 26010000 		.4byte	.LVL102
+ 1851 05d0 4C080000 		.4byte	0x84c
+ 1852 05d4 DE050000 		.4byte	0x5de
+ 1853 05d8 0F       		.uleb128 0xf
+ 1854 05d9 01       		.uleb128 0x1
+ 1855 05da 50       		.byte	0x50
+ 1856 05db 01       		.uleb128 0x1
+ 1857 05dc 30       		.byte	0x30
+ 1858 05dd 00       		.byte	0
+ 1859 05de 0A       		.uleb128 0xa
+ 1860 05df 3C010000 		.4byte	.LVL104
+ 1861 05e3 70010000 		.4byte	0x170
+ 1862 05e7 0A       		.uleb128 0xa
+ 1863 05e8 40010000 		.4byte	.LVL105
+ 1864 05ec 5F020000 		.4byte	0x25f
+ 1865 05f0 0A       		.uleb128 0xa
+ 1866 05f1 44010000 		.4byte	.LVL106
+ 1867 05f5 58080000 		.4byte	0x858
+ 1868 05f9 0A       		.uleb128 0xa
+ 1869 05fa 4E010000 		.4byte	.LVL107
+ 1870 05fe 64080000 		.4byte	0x864
+ 1871 0602 0E       		.uleb128 0xe
+ 1872 0603 6C010000 		.4byte	.LVL109
+ 1873 0607 64080000 		.4byte	0x864
+ 1874 060b 15060000 		.4byte	0x615
+ 1875 060f 0F       		.uleb128 0xf
+ 1876 0610 01       		.uleb128 0x1
+ 1877 0611 50       		.byte	0x50
+ 1878 0612 01       		.uleb128 0x1
+ 1879 0613 30       		.byte	0x30
+ 1880 0614 00       		.byte	0
+ 1881 0615 0E       		.uleb128 0xe
+ 1882 0616 78010000 		.4byte	.LVL111
+ 1883 061a 41080000 		.4byte	0x841
+ 1884 061e 28060000 		.4byte	0x628
+ 1885 0622 0F       		.uleb128 0xf
+ 1886 0623 01       		.uleb128 0x1
+ 1887 0624 50       		.byte	0x50
+ 1888 0625 01       		.uleb128 0x1
+ 1889 0626 33       		.byte	0x33
+ 1890 0627 00       		.byte	0
+ 1891 0628 0E       		.uleb128 0xe
+ 1892 0629 7E010000 		.4byte	.LVL112
+ 1893 062d 58070000 		.4byte	0x758
+ 1894 0631 3B060000 		.4byte	0x63b
+ 1895 0635 0F       		.uleb128 0xf
+ 1896 0636 01       		.uleb128 0x1
+ 1897 0637 50       		.byte	0x50
+ 1898 0638 01       		.uleb128 0x1
+ 1899 0639 33       		.byte	0x33
+ 1900 063a 00       		.byte	0
+ 1901 063b 0A       		.uleb128 0xa
+ 1902 063c 9E010000 		.4byte	.LVL116
+ 1903 0640 A8020000 		.4byte	0x2a8
+ 1904 0644 0A       		.uleb128 0xa
+ 1905 0645 B2010000 		.4byte	.LVL118
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 56
+
+
+ 1906 0649 65030000 		.4byte	0x365
+ 1907 064d 10       		.uleb128 0x10
+ 1908 064e BC010000 		.4byte	.LVL120
+ 1909 0652 6F080000 		.4byte	0x86f
+ 1910 0656 0F       		.uleb128 0xf
+ 1911 0657 01       		.uleb128 0x1
+ 1912 0658 50       		.byte	0x50
+ 1913 0659 01       		.uleb128 0x1
+ 1914 065a 30       		.byte	0x30
+ 1915 065b 00       		.byte	0
+ 1916 065c 00       		.byte	0
+ 1917 065d 14       		.uleb128 0x14
+ 1918 065e C9000000 		.4byte	.LASF52
+ 1919 0662 01       		.byte	0x1
+ 1920 0663 9C       		.byte	0x9c
+ 1921 0664 05010000 		.4byte	0x105
+ 1922 0668 05       		.uleb128 0x5
+ 1923 0669 03       		.byte	0x3
+ 1924 066a 00000000 		.4byte	deviceScanMode
+ 1925 066e 14       		.uleb128 0x14
+ 1926 066f 7D040000 		.4byte	.LASF53
+ 1927 0673 01       		.byte	0x1
+ 1928 0674 9F       		.byte	0x9f
+ 1929 0675 77000000 		.4byte	0x77
+ 1930 0679 05       		.uleb128 0x5
+ 1931 067a 03       		.byte	0x3
+ 1932 067b 00000000 		.4byte	fingerStatus
+ 1933 067f 15       		.uleb128 0x15
+ 1934 0680 77000000 		.4byte	0x77
+ 1935 0684 8F060000 		.4byte	0x68f
+ 1936 0688 16       		.uleb128 0x16
+ 1937 0689 B5000000 		.4byte	0xb5
+ 1938 068d 01       		.byte	0x1
+ 1939 068e 00       		.byte	0
+ 1940 068f 14       		.uleb128 0x14
+ 1941 0690 4E020000 		.4byte	.LASF54
+ 1942 0694 01       		.byte	0x1
+ 1943 0695 A2       		.byte	0xa2
+ 1944 0696 7F060000 		.4byte	0x67f
+ 1945 069a 05       		.uleb128 0x5
+ 1946 069b 03       		.byte	0x3
+ 1947 069c 00000000 		.4byte	touchPosition
+ 1948 06a0 14       		.uleb128 0x14
+ 1949 06a1 10000000 		.4byte	.LASF55
+ 1950 06a5 01       		.byte	0x1
+ 1951 06a6 A5       		.byte	0xa5
+ 1952 06a7 7F060000 		.4byte	0x67f
+ 1953 06ab 05       		.uleb128 0x5
+ 1954 06ac 03       		.byte	0x3
+ 1955 06ad 00000000 		.4byte	prevTouchPosition
+ 1956 06b1 14       		.uleb128 0x14
+ 1957 06b2 3E060000 		.4byte	.LASF56
+ 1958 06b6 01       		.byte	0x1
+ 1959 06b7 A8       		.byte	0xa8
+ 1960 06b8 7F060000 		.4byte	0x67f
+ 1961 06bc 05       		.uleb128 0x5
+ 1962 06bd 03       		.byte	0x3
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 57
+
+
+ 1963 06be 00000000 		.4byte	diffPosition
+ 1964 06c2 14       		.uleb128 0x14
+ 1965 06c3 00000000 		.4byte	.LASF57
+ 1966 06c7 01       		.byte	0x1
+ 1967 06c8 AB       		.byte	0xab
+ 1968 06c9 6B000000 		.4byte	0x6b
+ 1969 06cd 05       		.uleb128 0x5
+ 1970 06ce 03       		.byte	0x3
+ 1971 06cf 00000000 		.4byte	xyDirectionData
+ 1972 06d3 14       		.uleb128 0x14
+ 1973 06d4 FD050000 		.4byte	.LASF58
+ 1974 06d8 01       		.byte	0x1
+ 1975 06d9 AE       		.byte	0xae
+ 1976 06da 6B000000 		.4byte	0x6b
+ 1977 06de 05       		.uleb128 0x5
+ 1978 06df 03       		.byte	0x3
+ 1979 06e0 00000000 		.4byte	mouseClickData
+ 1980 06e4 15       		.uleb128 0x15
+ 1981 06e5 A4000000 		.4byte	0xa4
+ 1982 06e9 F4060000 		.4byte	0x6f4
+ 1983 06ed 16       		.uleb128 0x16
+ 1984 06ee B5000000 		.4byte	0xb5
+ 1985 06f2 0F       		.byte	0xf
+ 1986 06f3 00       		.byte	0
+ 1987 06f4 14       		.uleb128 0x14
+ 1988 06f5 FF030000 		.4byte	.LASF59
+ 1989 06f9 01       		.byte	0x1
+ 1990 06fa B1       		.byte	0xb1
+ 1991 06fb 05070000 		.4byte	0x705
+ 1992 06ff 05       		.uleb128 0x5
+ 1993 0700 03       		.byte	0x3
+ 1994 0701 00000000 		.4byte	ezI2cBuffer
+ 1995 0705 05       		.uleb128 0x5
+ 1996 0706 E4060000 		.4byte	0x6e4
+ 1997 070a 14       		.uleb128 0x14
+ 1998 070b 59030000 		.4byte	.LASF60
+ 1999 070f 01       		.byte	0x1
+ 2000 0710 B4       		.byte	0xb4
+ 2001 0711 A4000000 		.4byte	0xa4
+ 2002 0715 05       		.uleb128 0x5
+ 2003 0716 03       		.byte	0x3
+ 2004 0717 00000000 		.4byte	wdtInterruptOccured
+ 2005 071b 14       		.uleb128 0x14
+ 2006 071c 72020000 		.4byte	.LASF61
+ 2007 0720 01       		.byte	0x1
+ 2008 0721 B7       		.byte	0xb7
+ 2009 0722 A9000000 		.4byte	0xa9
+ 2010 0726 05       		.uleb128 0x5
+ 2011 0727 03       		.byte	0x3
+ 2012 0728 00000000 		.4byte	wdtMatchValue
+ 2013 072c 17       		.uleb128 0x17
+ 2014 072d 37020000 		.4byte	.LASF62
+ 2015 0731 37020000 		.4byte	.LASF62
+ 2016 0735 03       		.byte	0x3
+ 2017 0736 8F       		.byte	0x8f
+ 2018 0737 17       		.uleb128 0x17
+ 2019 0738 DD030000 		.4byte	.LASF63
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 58
+
+
+ 2020 073c DD030000 		.4byte	.LASF63
+ 2021 0740 03       		.byte	0x3
+ 2022 0741 8B       		.byte	0x8b
+ 2023 0742 17       		.uleb128 0x17
+ 2024 0743 AA040000 		.4byte	.LASF64
+ 2025 0747 AA040000 		.4byte	.LASF64
+ 2026 074b 03       		.byte	0x3
+ 2027 074c 8A       		.byte	0x8a
+ 2028 074d 17       		.uleb128 0x17
+ 2029 074e 3E040000 		.4byte	.LASF65
+ 2030 0752 3E040000 		.4byte	.LASF65
+ 2031 0756 04       		.byte	0x4
+ 2032 0757 3B       		.byte	0x3b
+ 2033 0758 18       		.uleb128 0x18
+ 2034 0759 96060000 		.4byte	.LASF66
+ 2035 075d 96060000 		.4byte	.LASF66
+ 2036 0761 05       		.byte	0x5
+ 2037 0762 C705     		.2byte	0x5c7
+ 2038 0764 17       		.uleb128 0x17
+ 2039 0765 C0030000 		.4byte	.LASF67
+ 2040 0769 C0030000 		.4byte	.LASF67
+ 2041 076d 06       		.byte	0x6
+ 2042 076e 72       		.byte	0x72
+ 2043 076f 17       		.uleb128 0x17
+ 2044 0770 5A040000 		.4byte	.LASF68
+ 2045 0774 5A040000 		.4byte	.LASF68
+ 2046 0778 07       		.byte	0x7
+ 2047 0779 A2       		.byte	0xa2
+ 2048 077a 17       		.uleb128 0x17
+ 2049 077b 7F000000 		.4byte	.LASF69
+ 2050 077f 7F000000 		.4byte	.LASF69
+ 2051 0783 08       		.byte	0x8
+ 2052 0784 F8       		.byte	0xf8
+ 2053 0785 17       		.uleb128 0x17
+ 2054 0786 A6050000 		.4byte	.LASF70
+ 2055 078a A6050000 		.4byte	.LASF70
+ 2056 078e 07       		.byte	0x7
+ 2057 078f 9E       		.byte	0x9e
+ 2058 0790 17       		.uleb128 0x17
+ 2059 0791 80010000 		.4byte	.LASF71
+ 2060 0795 80010000 		.4byte	.LASF71
+ 2061 0799 03       		.byte	0x3
+ 2062 079a 32       		.byte	0x32
+ 2063 079b 17       		.uleb128 0x17
+ 2064 079c A8030000 		.4byte	.LASF72
+ 2065 07a0 A8030000 		.4byte	.LASF72
+ 2066 07a4 06       		.byte	0x6
+ 2067 07a5 7C       		.byte	0x7c
+ 2068 07a6 17       		.uleb128 0x17
+ 2069 07a7 E3040000 		.4byte	.LASF73
+ 2070 07ab E3040000 		.4byte	.LASF73
+ 2071 07af 09       		.byte	0x9
+ 2072 07b0 57       		.byte	0x57
+ 2073 07b1 17       		.uleb128 0x17
+ 2074 07b2 1E020000 		.4byte	.LASF74
+ 2075 07b6 1E020000 		.4byte	.LASF74
+ 2076 07ba 06       		.byte	0x6
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 59
+
+
+ 2077 07bb 7D       		.byte	0x7d
+ 2078 07bc 17       		.uleb128 0x17
+ 2079 07bd 22040000 		.4byte	.LASF75
+ 2080 07c1 22040000 		.4byte	.LASF75
+ 2081 07c5 03       		.byte	0x3
+ 2082 07c6 31       		.byte	0x31
+ 2083 07c7 17       		.uleb128 0x17
+ 2084 07c8 69000000 		.4byte	.LASF76
+ 2085 07cc 69000000 		.4byte	.LASF76
+ 2086 07d0 08       		.byte	0x8
+ 2087 07d1 F9       		.byte	0xf9
+ 2088 07d2 17       		.uleb128 0x17
+ 2089 07d3 D6010000 		.4byte	.LASF77
+ 2090 07d7 D6010000 		.4byte	.LASF77
+ 2091 07db 03       		.byte	0x3
+ 2092 07dc 30       		.byte	0x30
+ 2093 07dd 17       		.uleb128 0x17
+ 2094 07de E4050000 		.4byte	.LASF78
+ 2095 07e2 E4050000 		.4byte	.LASF78
+ 2096 07e6 08       		.byte	0x8
+ 2097 07e7 D0       		.byte	0xd0
+ 2098 07e8 17       		.uleb128 0x17
+ 2099 07e9 CC030000 		.4byte	.LASF79
+ 2100 07ed CC030000 		.4byte	.LASF79
+ 2101 07f1 03       		.byte	0x3
+ 2102 07f2 8C       		.byte	0x8c
+ 2103 07f3 17       		.uleb128 0x17
+ 2104 07f4 51000000 		.4byte	.LASF80
+ 2105 07f8 51000000 		.4byte	.LASF80
+ 2106 07fc 03       		.byte	0x3
+ 2107 07fd 91       		.byte	0x91
+ 2108 07fe 17       		.uleb128 0x17
+ 2109 07ff 8F050000 		.4byte	.LASF81
+ 2110 0803 8F050000 		.4byte	.LASF81
+ 2111 0807 08       		.byte	0x8
+ 2112 0808 D6       		.byte	0xd6
+ 2113 0809 17       		.uleb128 0x17
+ 2114 080a 68060000 		.4byte	.LASF82
+ 2115 080e 68060000 		.4byte	.LASF82
+ 2116 0812 08       		.byte	0x8
+ 2117 0813 EC       		.byte	0xec
+ 2118 0814 17       		.uleb128 0x17
+ 2119 0815 CB050000 		.4byte	.LASF83
+ 2120 0819 CB050000 		.4byte	.LASF83
+ 2121 081d 0A       		.byte	0xa
+ 2122 081e 5A       		.byte	0x5a
+ 2123 081f 18       		.uleb128 0x18
+ 2124 0820 39000000 		.4byte	.LASF84
+ 2125 0824 39000000 		.4byte	.LASF84
+ 2126 0828 0B       		.byte	0xb
+ 2127 0829 8801     		.2byte	0x188
+ 2128 082b 17       		.uleb128 0x17
+ 2129 082c 37050000 		.4byte	.LASF85
+ 2130 0830 37050000 		.4byte	.LASF85
+ 2131 0834 0A       		.byte	0xa
+ 2132 0835 58       		.byte	0x58
+ 2133 0836 17       		.uleb128 0x17
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 60
+
+
+ 2134 0837 70040000 		.4byte	.LASF86
+ 2135 083b 70040000 		.4byte	.LASF86
+ 2136 083f 09       		.byte	0x9
+ 2137 0840 56       		.byte	0x56
+ 2138 0841 17       		.uleb128 0x17
+ 2139 0842 1D060000 		.4byte	.LASF87
+ 2140 0846 1D060000 		.4byte	.LASF87
+ 2141 084a 04       		.byte	0x4
+ 2142 084b 40       		.byte	0x40
+ 2143 084c 18       		.uleb128 0x18
+ 2144 084d 8E020000 		.4byte	.LASF88
+ 2145 0851 8E020000 		.4byte	.LASF88
+ 2146 0855 05       		.byte	0x5
+ 2147 0856 DD05     		.2byte	0x5dd
+ 2148 0858 18       		.uleb128 0x18
+ 2149 0859 9B010000 		.4byte	.LASF89
+ 2150 085d 9B010000 		.4byte	.LASF89
+ 2151 0861 05       		.byte	0x5
+ 2152 0862 C605     		.2byte	0x5c6
+ 2153 0864 17       		.uleb128 0x17
+ 2154 0865 5A060000 		.4byte	.LASF90
+ 2155 0869 5A060000 		.4byte	.LASF90
+ 2156 086d 0C       		.byte	0xc
+ 2157 086e 33       		.byte	0x33
+ 2158 086f 17       		.uleb128 0x17
+ 2159 0870 F8030000 		.4byte	.LASF91
+ 2160 0874 F8030000 		.4byte	.LASF91
+ 2161 0878 08       		.byte	0x8
+ 2162 0879 FA       		.byte	0xfa
+ 2163 087a 00       		.byte	0
+ 2164              		.section	.debug_abbrev,"",%progbits
+ 2165              	.Ldebug_abbrev0:
+ 2166 0000 01       		.uleb128 0x1
+ 2167 0001 11       		.uleb128 0x11
+ 2168 0002 01       		.byte	0x1
+ 2169 0003 25       		.uleb128 0x25
+ 2170 0004 0E       		.uleb128 0xe
+ 2171 0005 13       		.uleb128 0x13
+ 2172 0006 0B       		.uleb128 0xb
+ 2173 0007 03       		.uleb128 0x3
+ 2174 0008 0E       		.uleb128 0xe
+ 2175 0009 1B       		.uleb128 0x1b
+ 2176 000a 0E       		.uleb128 0xe
+ 2177 000b 55       		.uleb128 0x55
+ 2178 000c 17       		.uleb128 0x17
+ 2179 000d 11       		.uleb128 0x11
+ 2180 000e 01       		.uleb128 0x1
+ 2181 000f 10       		.uleb128 0x10
+ 2182 0010 17       		.uleb128 0x17
+ 2183 0011 00       		.byte	0
+ 2184 0012 00       		.byte	0
+ 2185 0013 02       		.uleb128 0x2
+ 2186 0014 24       		.uleb128 0x24
+ 2187 0015 00       		.byte	0
+ 2188 0016 0B       		.uleb128 0xb
+ 2189 0017 0B       		.uleb128 0xb
+ 2190 0018 3E       		.uleb128 0x3e
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 61
+
+
+ 2191 0019 0B       		.uleb128 0xb
+ 2192 001a 03       		.uleb128 0x3
+ 2193 001b 0E       		.uleb128 0xe
+ 2194 001c 00       		.byte	0
+ 2195 001d 00       		.byte	0
+ 2196 001e 03       		.uleb128 0x3
+ 2197 001f 24       		.uleb128 0x24
+ 2198 0020 00       		.byte	0
+ 2199 0021 0B       		.uleb128 0xb
+ 2200 0022 0B       		.uleb128 0xb
+ 2201 0023 3E       		.uleb128 0x3e
+ 2202 0024 0B       		.uleb128 0xb
+ 2203 0025 03       		.uleb128 0x3
+ 2204 0026 08       		.uleb128 0x8
+ 2205 0027 00       		.byte	0
+ 2206 0028 00       		.byte	0
+ 2207 0029 04       		.uleb128 0x4
+ 2208 002a 16       		.uleb128 0x16
+ 2209 002b 00       		.byte	0
+ 2210 002c 03       		.uleb128 0x3
+ 2211 002d 0E       		.uleb128 0xe
+ 2212 002e 3A       		.uleb128 0x3a
+ 2213 002f 0B       		.uleb128 0xb
+ 2214 0030 3B       		.uleb128 0x3b
+ 2215 0031 05       		.uleb128 0x5
+ 2216 0032 49       		.uleb128 0x49
+ 2217 0033 13       		.uleb128 0x13
+ 2218 0034 00       		.byte	0
+ 2219 0035 00       		.byte	0
+ 2220 0036 05       		.uleb128 0x5
+ 2221 0037 35       		.uleb128 0x35
+ 2222 0038 00       		.byte	0
+ 2223 0039 49       		.uleb128 0x49
+ 2224 003a 13       		.uleb128 0x13
+ 2225 003b 00       		.byte	0
+ 2226 003c 00       		.byte	0
+ 2227 003d 06       		.uleb128 0x6
+ 2228 003e 04       		.uleb128 0x4
+ 2229 003f 01       		.byte	0x1
+ 2230 0040 0B       		.uleb128 0xb
+ 2231 0041 0B       		.uleb128 0xb
+ 2232 0042 49       		.uleb128 0x49
+ 2233 0043 13       		.uleb128 0x13
+ 2234 0044 3A       		.uleb128 0x3a
+ 2235 0045 0B       		.uleb128 0xb
+ 2236 0046 3B       		.uleb128 0x3b
+ 2237 0047 0B       		.uleb128 0xb
+ 2238 0048 01       		.uleb128 0x1
+ 2239 0049 13       		.uleb128 0x13
+ 2240 004a 00       		.byte	0
+ 2241 004b 00       		.byte	0
+ 2242 004c 07       		.uleb128 0x7
+ 2243 004d 28       		.uleb128 0x28
+ 2244 004e 00       		.byte	0
+ 2245 004f 03       		.uleb128 0x3
+ 2246 0050 0E       		.uleb128 0xe
+ 2247 0051 1C       		.uleb128 0x1c
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 62
+
+
+ 2248 0052 0B       		.uleb128 0xb
+ 2249 0053 00       		.byte	0
+ 2250 0054 00       		.byte	0
+ 2251 0055 08       		.uleb128 0x8
+ 2252 0056 16       		.uleb128 0x16
+ 2253 0057 00       		.byte	0
+ 2254 0058 03       		.uleb128 0x3
+ 2255 0059 0E       		.uleb128 0xe
+ 2256 005a 3A       		.uleb128 0x3a
+ 2257 005b 0B       		.uleb128 0xb
+ 2258 005c 3B       		.uleb128 0x3b
+ 2259 005d 0B       		.uleb128 0xb
+ 2260 005e 49       		.uleb128 0x49
+ 2261 005f 13       		.uleb128 0x13
+ 2262 0060 00       		.byte	0
+ 2263 0061 00       		.byte	0
+ 2264 0062 09       		.uleb128 0x9
+ 2265 0063 2E       		.uleb128 0x2e
+ 2266 0064 01       		.byte	0x1
+ 2267 0065 3F       		.uleb128 0x3f
+ 2268 0066 19       		.uleb128 0x19
+ 2269 0067 03       		.uleb128 0x3
+ 2270 0068 0E       		.uleb128 0xe
+ 2271 0069 3A       		.uleb128 0x3a
+ 2272 006a 0B       		.uleb128 0xb
+ 2273 006b 3B       		.uleb128 0x3b
+ 2274 006c 05       		.uleb128 0x5
+ 2275 006d 27       		.uleb128 0x27
+ 2276 006e 19       		.uleb128 0x19
+ 2277 006f 11       		.uleb128 0x11
+ 2278 0070 01       		.uleb128 0x1
+ 2279 0071 12       		.uleb128 0x12
+ 2280 0072 06       		.uleb128 0x6
+ 2281 0073 40       		.uleb128 0x40
+ 2282 0074 18       		.uleb128 0x18
+ 2283 0075 9742     		.uleb128 0x2117
+ 2284 0077 19       		.uleb128 0x19
+ 2285 0078 01       		.uleb128 0x1
+ 2286 0079 13       		.uleb128 0x13
+ 2287 007a 00       		.byte	0
+ 2288 007b 00       		.byte	0
+ 2289 007c 0A       		.uleb128 0xa
+ 2290 007d 898201   		.uleb128 0x4109
+ 2291 0080 00       		.byte	0
+ 2292 0081 11       		.uleb128 0x11
+ 2293 0082 01       		.uleb128 0x1
+ 2294 0083 31       		.uleb128 0x31
+ 2295 0084 13       		.uleb128 0x13
+ 2296 0085 00       		.byte	0
+ 2297 0086 00       		.byte	0
+ 2298 0087 0B       		.uleb128 0xb
+ 2299 0088 34       		.uleb128 0x34
+ 2300 0089 00       		.byte	0
+ 2301 008a 03       		.uleb128 0x3
+ 2302 008b 0E       		.uleb128 0xe
+ 2303 008c 3A       		.uleb128 0x3a
+ 2304 008d 0B       		.uleb128 0xb
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 63
+
+
+ 2305 008e 3B       		.uleb128 0x3b
+ 2306 008f 05       		.uleb128 0x5
+ 2307 0090 49       		.uleb128 0x49
+ 2308 0091 13       		.uleb128 0x13
+ 2309 0092 1C       		.uleb128 0x1c
+ 2310 0093 05       		.uleb128 0x5
+ 2311 0094 00       		.byte	0
+ 2312 0095 00       		.byte	0
+ 2313 0096 0C       		.uleb128 0xc
+ 2314 0097 34       		.uleb128 0x34
+ 2315 0098 00       		.byte	0
+ 2316 0099 03       		.uleb128 0x3
+ 2317 009a 0E       		.uleb128 0xe
+ 2318 009b 3A       		.uleb128 0x3a
+ 2319 009c 0B       		.uleb128 0xb
+ 2320 009d 3B       		.uleb128 0x3b
+ 2321 009e 05       		.uleb128 0x5
+ 2322 009f 49       		.uleb128 0x49
+ 2323 00a0 13       		.uleb128 0x13
+ 2324 00a1 02       		.uleb128 0x2
+ 2325 00a2 18       		.uleb128 0x18
+ 2326 00a3 00       		.byte	0
+ 2327 00a4 00       		.byte	0
+ 2328 00a5 0D       		.uleb128 0xd
+ 2329 00a6 34       		.uleb128 0x34
+ 2330 00a7 00       		.byte	0
+ 2331 00a8 03       		.uleb128 0x3
+ 2332 00a9 0E       		.uleb128 0xe
+ 2333 00aa 3A       		.uleb128 0x3a
+ 2334 00ab 0B       		.uleb128 0xb
+ 2335 00ac 3B       		.uleb128 0x3b
+ 2336 00ad 05       		.uleb128 0x5
+ 2337 00ae 49       		.uleb128 0x49
+ 2338 00af 13       		.uleb128 0x13
+ 2339 00b0 02       		.uleb128 0x2
+ 2340 00b1 17       		.uleb128 0x17
+ 2341 00b2 00       		.byte	0
+ 2342 00b3 00       		.byte	0
+ 2343 00b4 0E       		.uleb128 0xe
+ 2344 00b5 898201   		.uleb128 0x4109
+ 2345 00b8 01       		.byte	0x1
+ 2346 00b9 11       		.uleb128 0x11
+ 2347 00ba 01       		.uleb128 0x1
+ 2348 00bb 31       		.uleb128 0x31
+ 2349 00bc 13       		.uleb128 0x13
+ 2350 00bd 01       		.uleb128 0x1
+ 2351 00be 13       		.uleb128 0x13
+ 2352 00bf 00       		.byte	0
+ 2353 00c0 00       		.byte	0
+ 2354 00c1 0F       		.uleb128 0xf
+ 2355 00c2 8A8201   		.uleb128 0x410a
+ 2356 00c5 00       		.byte	0
+ 2357 00c6 02       		.uleb128 0x2
+ 2358 00c7 18       		.uleb128 0x18
+ 2359 00c8 9142     		.uleb128 0x2111
+ 2360 00ca 18       		.uleb128 0x18
+ 2361 00cb 00       		.byte	0
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 64
+
+
+ 2362 00cc 00       		.byte	0
+ 2363 00cd 10       		.uleb128 0x10
+ 2364 00ce 898201   		.uleb128 0x4109
+ 2365 00d1 01       		.byte	0x1
+ 2366 00d2 11       		.uleb128 0x11
+ 2367 00d3 01       		.uleb128 0x1
+ 2368 00d4 31       		.uleb128 0x31
+ 2369 00d5 13       		.uleb128 0x13
+ 2370 00d6 00       		.byte	0
+ 2371 00d7 00       		.byte	0
+ 2372 00d8 11       		.uleb128 0x11
+ 2373 00d9 2E       		.uleb128 0x2e
+ 2374 00da 01       		.byte	0x1
+ 2375 00db 3F       		.uleb128 0x3f
+ 2376 00dc 19       		.uleb128 0x19
+ 2377 00dd 03       		.uleb128 0x3
+ 2378 00de 0E       		.uleb128 0xe
+ 2379 00df 3A       		.uleb128 0x3a
+ 2380 00e0 0B       		.uleb128 0xb
+ 2381 00e1 3B       		.uleb128 0x3b
+ 2382 00e2 05       		.uleb128 0x5
+ 2383 00e3 27       		.uleb128 0x27
+ 2384 00e4 19       		.uleb128 0x19
+ 2385 00e5 49       		.uleb128 0x49
+ 2386 00e6 13       		.uleb128 0x13
+ 2387 00e7 11       		.uleb128 0x11
+ 2388 00e8 01       		.uleb128 0x1
+ 2389 00e9 12       		.uleb128 0x12
+ 2390 00ea 06       		.uleb128 0x6
+ 2391 00eb 40       		.uleb128 0x40
+ 2392 00ec 18       		.uleb128 0x18
+ 2393 00ed 9742     		.uleb128 0x2117
+ 2394 00ef 19       		.uleb128 0x19
+ 2395 00f0 01       		.uleb128 0x1
+ 2396 00f1 13       		.uleb128 0x13
+ 2397 00f2 00       		.byte	0
+ 2398 00f3 00       		.byte	0
+ 2399 00f4 12       		.uleb128 0x12
+ 2400 00f5 2E       		.uleb128 0x2e
+ 2401 00f6 01       		.byte	0x1
+ 2402 00f7 3F       		.uleb128 0x3f
+ 2403 00f8 19       		.uleb128 0x19
+ 2404 00f9 03       		.uleb128 0x3
+ 2405 00fa 0E       		.uleb128 0xe
+ 2406 00fb 3A       		.uleb128 0x3a
+ 2407 00fc 0B       		.uleb128 0xb
+ 2408 00fd 3B       		.uleb128 0x3b
+ 2409 00fe 0B       		.uleb128 0xb
+ 2410 00ff 49       		.uleb128 0x49
+ 2411 0100 13       		.uleb128 0x13
+ 2412 0101 8701     		.uleb128 0x87
+ 2413 0103 19       		.uleb128 0x19
+ 2414 0104 11       		.uleb128 0x11
+ 2415 0105 01       		.uleb128 0x1
+ 2416 0106 12       		.uleb128 0x12
+ 2417 0107 06       		.uleb128 0x6
+ 2418 0108 40       		.uleb128 0x40
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 65
+
+
+ 2419 0109 18       		.uleb128 0x18
+ 2420 010a 9742     		.uleb128 0x2117
+ 2421 010c 19       		.uleb128 0x19
+ 2422 010d 01       		.uleb128 0x1
+ 2423 010e 13       		.uleb128 0x13
+ 2424 010f 00       		.byte	0
+ 2425 0110 00       		.byte	0
+ 2426 0111 13       		.uleb128 0x13
+ 2427 0112 34       		.uleb128 0x34
+ 2428 0113 00       		.byte	0
+ 2429 0114 03       		.uleb128 0x3
+ 2430 0115 0E       		.uleb128 0xe
+ 2431 0116 3A       		.uleb128 0x3a
+ 2432 0117 0B       		.uleb128 0xb
+ 2433 0118 3B       		.uleb128 0x3b
+ 2434 0119 0B       		.uleb128 0xb
+ 2435 011a 49       		.uleb128 0x49
+ 2436 011b 13       		.uleb128 0x13
+ 2437 011c 02       		.uleb128 0x2
+ 2438 011d 17       		.uleb128 0x17
+ 2439 011e 00       		.byte	0
+ 2440 011f 00       		.byte	0
+ 2441 0120 14       		.uleb128 0x14
+ 2442 0121 34       		.uleb128 0x34
+ 2443 0122 00       		.byte	0
+ 2444 0123 03       		.uleb128 0x3
+ 2445 0124 0E       		.uleb128 0xe
+ 2446 0125 3A       		.uleb128 0x3a
+ 2447 0126 0B       		.uleb128 0xb
+ 2448 0127 3B       		.uleb128 0x3b
+ 2449 0128 0B       		.uleb128 0xb
+ 2450 0129 49       		.uleb128 0x49
+ 2451 012a 13       		.uleb128 0x13
+ 2452 012b 3F       		.uleb128 0x3f
+ 2453 012c 19       		.uleb128 0x19
+ 2454 012d 02       		.uleb128 0x2
+ 2455 012e 18       		.uleb128 0x18
+ 2456 012f 00       		.byte	0
+ 2457 0130 00       		.byte	0
+ 2458 0131 15       		.uleb128 0x15
+ 2459 0132 01       		.uleb128 0x1
+ 2460 0133 01       		.byte	0x1
+ 2461 0134 49       		.uleb128 0x49
+ 2462 0135 13       		.uleb128 0x13
+ 2463 0136 01       		.uleb128 0x1
+ 2464 0137 13       		.uleb128 0x13
+ 2465 0138 00       		.byte	0
+ 2466 0139 00       		.byte	0
+ 2467 013a 16       		.uleb128 0x16
+ 2468 013b 21       		.uleb128 0x21
+ 2469 013c 00       		.byte	0
+ 2470 013d 49       		.uleb128 0x49
+ 2471 013e 13       		.uleb128 0x13
+ 2472 013f 2F       		.uleb128 0x2f
+ 2473 0140 0B       		.uleb128 0xb
+ 2474 0141 00       		.byte	0
+ 2475 0142 00       		.byte	0
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 66
+
+
+ 2476 0143 17       		.uleb128 0x17
+ 2477 0144 2E       		.uleb128 0x2e
+ 2478 0145 00       		.byte	0
+ 2479 0146 3F       		.uleb128 0x3f
+ 2480 0147 19       		.uleb128 0x19
+ 2481 0148 3C       		.uleb128 0x3c
+ 2482 0149 19       		.uleb128 0x19
+ 2483 014a 6E       		.uleb128 0x6e
+ 2484 014b 0E       		.uleb128 0xe
+ 2485 014c 03       		.uleb128 0x3
+ 2486 014d 0E       		.uleb128 0xe
+ 2487 014e 3A       		.uleb128 0x3a
+ 2488 014f 0B       		.uleb128 0xb
+ 2489 0150 3B       		.uleb128 0x3b
+ 2490 0151 0B       		.uleb128 0xb
+ 2491 0152 00       		.byte	0
+ 2492 0153 00       		.byte	0
+ 2493 0154 18       		.uleb128 0x18
+ 2494 0155 2E       		.uleb128 0x2e
+ 2495 0156 00       		.byte	0
+ 2496 0157 3F       		.uleb128 0x3f
+ 2497 0158 19       		.uleb128 0x19
+ 2498 0159 3C       		.uleb128 0x3c
+ 2499 015a 19       		.uleb128 0x19
+ 2500 015b 6E       		.uleb128 0x6e
+ 2501 015c 0E       		.uleb128 0xe
+ 2502 015d 03       		.uleb128 0x3
+ 2503 015e 0E       		.uleb128 0xe
+ 2504 015f 3A       		.uleb128 0x3a
+ 2505 0160 0B       		.uleb128 0xb
+ 2506 0161 3B       		.uleb128 0x3b
+ 2507 0162 05       		.uleb128 0x5
+ 2508 0163 00       		.byte	0
+ 2509 0164 00       		.byte	0
+ 2510 0165 00       		.byte	0
+ 2511              		.section	.debug_loc,"",%progbits
+ 2512              	.Ldebug_loc0:
+ 2513              	.LLST0:
+ 2514 0000 02000000 		.4byte	.LVL5
+ 2515 0004 9E000000 		.4byte	.LVL9
+ 2516 0008 0200     		.2byte	0x2
+ 2517 000a 30       		.byte	0x30
+ 2518 000b 9F       		.byte	0x9f
+ 2519 000c 9E000000 		.4byte	.LVL9
+ 2520 0010 E8000000 		.4byte	.LVL13
+ 2521 0014 0100     		.2byte	0x1
+ 2522 0016 55       		.byte	0x55
+ 2523 0017 E8000000 		.4byte	.LVL13
+ 2524 001b 04010000 		.4byte	.LFE35
+ 2525 001f 0500     		.2byte	0x5
+ 2526 0021 03       		.byte	0x3
+ 2527 0022 02000000 		.4byte	prevLeftClick.5888
+ 2528 0026 00000000 		.4byte	0
+ 2529 002a 00000000 		.4byte	0
+ 2530              	.LLST1:
+ 2531 002e 02000000 		.4byte	.LVL5
+ 2532 0032 A6000000 		.4byte	.LVL11
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 67
+
+
+ 2533 0036 0200     		.2byte	0x2
+ 2534 0038 30       		.byte	0x30
+ 2535 0039 9F       		.byte	0x9f
+ 2536 003a A6000000 		.4byte	.LVL11
+ 2537 003e 04010000 		.4byte	.LFE35
+ 2538 0042 0100     		.2byte	0x1
+ 2539 0044 50       		.byte	0x50
+ 2540 0045 00000000 		.4byte	0
+ 2541 0049 00000000 		.4byte	0
+ 2542              	.LLST2:
+ 2543 004d 02000000 		.4byte	.LVL5
+ 2544 0051 10000000 		.4byte	.LVL7
+ 2545 0055 0200     		.2byte	0x2
+ 2546 0057 30       		.byte	0x30
+ 2547 0058 9F       		.byte	0x9f
+ 2548 0059 10000000 		.4byte	.LVL7
+ 2549 005d E8000000 		.4byte	.LVL12
+ 2550 0061 0100     		.2byte	0x1
+ 2551 0063 54       		.byte	0x54
+ 2552 0064 E8000000 		.4byte	.LVL12
+ 2553 0068 04010000 		.4byte	.LFE35
+ 2554 006c 0500     		.2byte	0x5
+ 2555 006e 03       		.byte	0x3
+ 2556 006f 01000000 		.4byte	prevfingerStatus.5892
+ 2557 0073 00000000 		.4byte	0
+ 2558 0077 00000000 		.4byte	0
+ 2559              	.LLST3:
+ 2560 007b 00000000 		.4byte	.LVL16
+ 2561 007f 48000000 		.4byte	.LVL22
+ 2562 0083 0200     		.2byte	0x2
+ 2563 0085 30       		.byte	0x30
+ 2564 0086 9F       		.byte	0x9f
+ 2565 0087 48000000 		.4byte	.LVL22
+ 2566 008b 4E000000 		.4byte	.LVL23
+ 2567 008f 0200     		.2byte	0x2
+ 2568 0091 31       		.byte	0x31
+ 2569 0092 9F       		.byte	0x9f
+ 2570 0093 4E000000 		.4byte	.LVL23
+ 2571 0097 54000000 		.4byte	.LVL24
+ 2572 009b 0100     		.2byte	0x1
+ 2573 009d 52       		.byte	0x52
+ 2574 009e 56000000 		.4byte	.LVL25
+ 2575 00a2 66000000 		.4byte	.LVL29
+ 2576 00a6 0100     		.2byte	0x1
+ 2577 00a8 52       		.byte	0x52
+ 2578 00a9 00000000 		.4byte	0
+ 2579 00ad 00000000 		.4byte	0
+ 2580              	.LLST4:
+ 2581 00b1 16000000 		.4byte	.LVL17
+ 2582 00b5 1A000000 		.4byte	.LVL18
+ 2583 00b9 0200     		.2byte	0x2
+ 2584 00bb 34       		.byte	0x34
+ 2585 00bc 9F       		.byte	0x9f
+ 2586 00bd 1A000000 		.4byte	.LVL18
+ 2587 00c1 22000000 		.4byte	.LVL19
+ 2588 00c5 0100     		.2byte	0x1
+ 2589 00c7 53       		.byte	0x53
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 68
+
+
+ 2590 00c8 24000000 		.4byte	.LVL20
+ 2591 00cc 2A000000 		.4byte	.LVL21
+ 2592 00d0 0100     		.2byte	0x1
+ 2593 00d2 53       		.byte	0x53
+ 2594 00d3 48000000 		.4byte	.LVL22
+ 2595 00d7 4E000000 		.4byte	.LVL23
+ 2596 00db 0200     		.2byte	0x2
+ 2597 00dd 30       		.byte	0x30
+ 2598 00de 9F       		.byte	0x9f
+ 2599 00df 4E000000 		.4byte	.LVL23
+ 2600 00e3 58000000 		.4byte	.LVL26
+ 2601 00e7 0100     		.2byte	0x1
+ 2602 00e9 53       		.byte	0x53
+ 2603 00ea 5A000000 		.4byte	.LVL27
+ 2604 00ee 62000000 		.4byte	.LVL28
+ 2605 00f2 0100     		.2byte	0x1
+ 2606 00f4 53       		.byte	0x53
+ 2607 00f5 84000000 		.4byte	.LVL30
+ 2608 00f9 8C000000 		.4byte	.LVL31
+ 2609 00fd 0100     		.2byte	0x1
+ 2610 00ff 53       		.byte	0x53
+ 2611 0100 8E000000 		.4byte	.LVL32
+ 2612 0104 90000000 		.4byte	.LVL33
+ 2613 0108 0100     		.2byte	0x1
+ 2614 010a 53       		.byte	0x53
+ 2615 010b 92000000 		.4byte	.LVL34
+ 2616 010f 9A000000 		.4byte	.LVL35
+ 2617 0113 0100     		.2byte	0x1
+ 2618 0115 53       		.byte	0x53
+ 2619 0116 00000000 		.4byte	0
+ 2620 011a 00000000 		.4byte	0
+ 2621              	.LLST5:
+ 2622 011e 02000000 		.4byte	.LVL36
+ 2623 0122 08000000 		.4byte	.LVL38
+ 2624 0126 0200     		.2byte	0x2
+ 2625 0128 30       		.byte	0x30
+ 2626 0129 9F       		.byte	0x9f
+ 2627 012a 08000000 		.4byte	.LVL38
+ 2628 012e 2A000000 		.4byte	.LVL46
+ 2629 0132 0600     		.2byte	0x6
+ 2630 0134 74       		.byte	0x74
+ 2631 0135 00       		.sleb128 0
+ 2632 0136 08       		.byte	0x8
+ 2633 0137 FF       		.byte	0xff
+ 2634 0138 1A       		.byte	0x1a
+ 2635 0139 9F       		.byte	0x9f
+ 2636 013a 00000000 		.4byte	0
+ 2637 013e 00000000 		.4byte	0
+ 2638              	.LLST6:
+ 2639 0142 08000000 		.4byte	.LVL50
+ 2640 0146 18000000 		.4byte	.LVL51
+ 2641 014a 0200     		.2byte	0x2
+ 2642 014c 30       		.byte	0x30
+ 2643 014d 9F       		.byte	0x9f
+ 2644 014e 18000000 		.4byte	.LVL51
+ 2645 0152 1D000000 		.4byte	.LVL52-1
+ 2646 0156 0100     		.2byte	0x1
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 69
+
+
+ 2647 0158 50       		.byte	0x50
+ 2648 0159 00000000 		.4byte	0
+ 2649 015d 00000000 		.4byte	0
+ 2650              	.LLST7:
+ 2651 0161 02000000 		.4byte	.LVL59
+ 2652 0165 24000000 		.4byte	.LVL64
+ 2653 0169 0200     		.2byte	0x2
+ 2654 016b 31       		.byte	0x31
+ 2655 016c 9F       		.byte	0x9f
+ 2656 016d 24000000 		.4byte	.LVL64
+ 2657 0171 2A000000 		.4byte	.LVL65
+ 2658 0175 0200     		.2byte	0x2
+ 2659 0177 34       		.byte	0x34
+ 2660 0178 9F       		.byte	0x9f
+ 2661 0179 2A000000 		.4byte	.LVL65
+ 2662 017d A8000000 		.4byte	.LVL82
+ 2663 0181 0100     		.2byte	0x1
+ 2664 0183 54       		.byte	0x54
+ 2665 0184 A8000000 		.4byte	.LVL82
+ 2666 0188 AC000000 		.4byte	.LVL83
+ 2667 018c 0200     		.2byte	0x2
+ 2668 018e 32       		.byte	0x32
+ 2669 018f 9F       		.byte	0x9f
+ 2670 0190 AC000000 		.4byte	.LVL83
+ 2671 0194 CE000000 		.4byte	.LVL88
+ 2672 0198 0100     		.2byte	0x1
+ 2673 019a 54       		.byte	0x54
+ 2674 019b D0000000 		.4byte	.LVL89
+ 2675 019f D2000000 		.4byte	.LVL90
+ 2676 01a3 0100     		.2byte	0x1
+ 2677 01a5 54       		.byte	0x54
+ 2678 01a6 D4000000 		.4byte	.LVL91
+ 2679 01aa DE000000 		.4byte	.LVL94
+ 2680 01ae 0100     		.2byte	0x1
+ 2681 01b0 54       		.byte	0x54
+ 2682 01b1 DE000000 		.4byte	.LVL94
+ 2683 01b5 92010000 		.4byte	.LVL114
+ 2684 01b9 0200     		.2byte	0x2
+ 2685 01bb 34       		.byte	0x34
+ 2686 01bc 9F       		.byte	0x9f
+ 2687 01bd 92010000 		.4byte	.LVL114
+ 2688 01c1 9A010000 		.4byte	.LVL115
+ 2689 01c5 0200     		.2byte	0x2
+ 2690 01c7 31       		.byte	0x31
+ 2691 01c8 9F       		.byte	0x9f
+ 2692 01c9 9A010000 		.4byte	.LVL115
+ 2693 01cd A8010000 		.4byte	.LVL117
+ 2694 01d1 0100     		.2byte	0x1
+ 2695 01d3 54       		.byte	0x54
+ 2696 01d4 A8010000 		.4byte	.LVL117
+ 2697 01d8 B6010000 		.4byte	.LVL119
+ 2698 01dc 0200     		.2byte	0x2
+ 2699 01de 31       		.byte	0x31
+ 2700 01df 9F       		.byte	0x9f
+ 2701 01e0 B6010000 		.4byte	.LVL119
+ 2702 01e4 D8010000 		.4byte	.LFE33
+ 2703 01e8 0100     		.2byte	0x1
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 70
+
+
+ 2704 01ea 54       		.byte	0x54
+ 2705 01eb 00000000 		.4byte	0
+ 2706 01ef 00000000 		.4byte	0
+ 2707              	.LLST8:
+ 2708 01f3 02000000 		.4byte	.LVL59
+ 2709 01f7 24000000 		.4byte	.LVL64
+ 2710 01fb 0200     		.2byte	0x2
+ 2711 01fd 30       		.byte	0x30
+ 2712 01fe 9F       		.byte	0x9f
+ 2713 01ff 24000000 		.4byte	.LVL64
+ 2714 0203 6C010000 		.4byte	.LVL109
+ 2715 0207 0100     		.2byte	0x1
+ 2716 0209 57       		.byte	0x57
+ 2717 020a 6C010000 		.4byte	.LVL109
+ 2718 020e 72010000 		.4byte	.LVL110
+ 2719 0212 0200     		.2byte	0x2
+ 2720 0214 30       		.byte	0x30
+ 2721 0215 9F       		.byte	0x9f
+ 2722 0216 72010000 		.4byte	.LVL110
+ 2723 021a 8C010000 		.4byte	.LVL113
+ 2724 021e 0100     		.2byte	0x1
+ 2725 0220 57       		.byte	0x57
+ 2726 0221 8C010000 		.4byte	.LVL113
+ 2727 0225 9A010000 		.4byte	.LVL115
+ 2728 0229 0200     		.2byte	0x2
+ 2729 022b 30       		.byte	0x30
+ 2730 022c 9F       		.byte	0x9f
+ 2731 022d 9A010000 		.4byte	.LVL115
+ 2732 0231 D8010000 		.4byte	.LFE33
+ 2733 0235 0100     		.2byte	0x1
+ 2734 0237 57       		.byte	0x57
+ 2735 0238 00000000 		.4byte	0
+ 2736 023c 00000000 		.4byte	0
+ 2737              	.LLST9:
+ 2738 0240 02000000 		.4byte	.LVL59
+ 2739 0244 24000000 		.4byte	.LVL64
+ 2740 0248 0200     		.2byte	0x2
+ 2741 024a 30       		.byte	0x30
+ 2742 024b 9F       		.byte	0x9f
+ 2743 024c 24000000 		.4byte	.LVL64
+ 2744 0250 5A000000 		.4byte	.LVL67
+ 2745 0254 0100     		.2byte	0x1
+ 2746 0256 56       		.byte	0x56
+ 2747 0257 5A000000 		.4byte	.LVL67
+ 2748 025b 5E000000 		.4byte	.LVL68
+ 2749 025f 0200     		.2byte	0x2
+ 2750 0261 31       		.byte	0x31
+ 2751 0262 9F       		.byte	0x9f
+ 2752 0263 5E000000 		.4byte	.LVL68
+ 2753 0267 68000000 		.4byte	.LVL69
+ 2754 026b 0100     		.2byte	0x1
+ 2755 026d 56       		.byte	0x56
+ 2756 026e 68000000 		.4byte	.LVL69
+ 2757 0272 6C000000 		.4byte	.LVL70
+ 2758 0276 0200     		.2byte	0x2
+ 2759 0278 32       		.byte	0x32
+ 2760 0279 9F       		.byte	0x9f
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 71
+
+
+ 2761 027a 6C000000 		.4byte	.LVL70
+ 2762 027e 8A000000 		.4byte	.LVL74
+ 2763 0282 0100     		.2byte	0x1
+ 2764 0284 56       		.byte	0x56
+ 2765 0285 8C000000 		.4byte	.LVL75
+ 2766 0289 92000000 		.4byte	.LVL76
+ 2767 028d 0100     		.2byte	0x1
+ 2768 028f 56       		.byte	0x56
+ 2769 0290 92000000 		.4byte	.LVL76
+ 2770 0294 96000000 		.4byte	.LVL77
+ 2771 0298 0200     		.2byte	0x2
+ 2772 029a 30       		.byte	0x30
+ 2773 029b 9F       		.byte	0x9f
+ 2774 029c 96000000 		.4byte	.LVL77
+ 2775 02a0 A0000000 		.4byte	.LVL79
+ 2776 02a4 0100     		.2byte	0x1
+ 2777 02a6 56       		.byte	0x56
+ 2778 02a7 A2000000 		.4byte	.LVL80
+ 2779 02ab 92010000 		.4byte	.LVL114
+ 2780 02af 0100     		.2byte	0x1
+ 2781 02b1 56       		.byte	0x56
+ 2782 02b2 92010000 		.4byte	.LVL114
+ 2783 02b6 9A010000 		.4byte	.LVL115
+ 2784 02ba 0200     		.2byte	0x2
+ 2785 02bc 30       		.byte	0x30
+ 2786 02bd 9F       		.byte	0x9f
+ 2787 02be 9A010000 		.4byte	.LVL115
+ 2788 02c2 D8010000 		.4byte	.LFE33
+ 2789 02c6 0100     		.2byte	0x1
+ 2790 02c8 56       		.byte	0x56
+ 2791 02c9 00000000 		.4byte	0
+ 2792 02cd 00000000 		.4byte	0
+ 2793              	.LLST10:
+ 2794 02d1 26010000 		.4byte	.LVL102
+ 2795 02d5 2C010000 		.4byte	.LVL103
+ 2796 02d9 0100     		.2byte	0x1
+ 2797 02db 50       		.byte	0x50
+ 2798 02dc 00000000 		.4byte	0
+ 2799 02e0 00000000 		.4byte	0
+ 2800              	.LLST11:
+ 2801 02e4 02000000 		.4byte	.LVL59
+ 2802 02e8 24000000 		.4byte	.LVL64
+ 2803 02ec 0200     		.2byte	0x2
+ 2804 02ee 30       		.byte	0x30
+ 2805 02ef 9F       		.byte	0x9f
+ 2806 02f0 B2000000 		.4byte	.LVL85
+ 2807 02f4 DE000000 		.4byte	.LVL94
+ 2808 02f8 0600     		.2byte	0x6
+ 2809 02fa 75       		.byte	0x75
+ 2810 02fb 00       		.sleb128 0
+ 2811 02fc 08       		.byte	0x8
+ 2812 02fd FF       		.byte	0xff
+ 2813 02fe 1A       		.byte	0x1a
+ 2814 02ff 9F       		.byte	0x9f
+ 2815 0300 00000000 		.4byte	0
+ 2816 0304 00000000 		.4byte	0
+ 2817              		.section	.debug_aranges,"",%progbits
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 72
+
+
+ 2818 0000 64000000 		.4byte	0x64
+ 2819 0004 0200     		.2byte	0x2
+ 2820 0006 00000000 		.4byte	.Ldebug_info0
+ 2821 000a 04       		.byte	0x4
+ 2822 000b 00       		.byte	0
+ 2823 000c 0000     		.2byte	0
+ 2824 000e 0000     		.2byte	0
+ 2825 0010 00000000 		.4byte	.LFB38
+ 2826 0014 24000000 		.4byte	.LFE38-.LFB38
+ 2827 0018 00000000 		.4byte	.LFB34
+ 2828 001c 2C000000 		.4byte	.LFE34-.LFB34
+ 2829 0020 00000000 		.4byte	.LFB35
+ 2830 0024 04010000 		.4byte	.LFE35-.LFB35
+ 2831 0028 00000000 		.4byte	.LFB36
+ 2832 002c 20000000 		.4byte	.LFE36-.LFB36
+ 2833 0030 00000000 		.4byte	.LFB37
+ 2834 0034 B8000000 		.4byte	.LFE37-.LFB37
+ 2835 0038 00000000 		.4byte	.LFB40
+ 2836 003c 2C000000 		.4byte	.LFE40-.LFB40
+ 2837 0040 00000000 		.4byte	.LFB41
+ 2838 0044 2E000000 		.4byte	.LFE41-.LFB41
+ 2839 0048 00000000 		.4byte	.LFB42
+ 2840 004c 38000000 		.4byte	.LFE42-.LFB42
+ 2841 0050 00000000 		.4byte	.LFB39
+ 2842 0054 30000000 		.4byte	.LFE39-.LFB39
+ 2843 0058 00000000 		.4byte	.LFB33
+ 2844 005c D8010000 		.4byte	.LFE33-.LFB33
+ 2845 0060 00000000 		.4byte	0
+ 2846 0064 00000000 		.4byte	0
+ 2847              		.section	.debug_ranges,"",%progbits
+ 2848              	.Ldebug_ranges0:
+ 2849 0000 00000000 		.4byte	.LFB38
+ 2850 0004 24000000 		.4byte	.LFE38
+ 2851 0008 00000000 		.4byte	.LFB34
+ 2852 000c 2C000000 		.4byte	.LFE34
+ 2853 0010 00000000 		.4byte	.LFB35
+ 2854 0014 04010000 		.4byte	.LFE35
+ 2855 0018 00000000 		.4byte	.LFB36
+ 2856 001c 20000000 		.4byte	.LFE36
+ 2857 0020 00000000 		.4byte	.LFB37
+ 2858 0024 B8000000 		.4byte	.LFE37
+ 2859 0028 00000000 		.4byte	.LFB40
+ 2860 002c 2C000000 		.4byte	.LFE40
+ 2861 0030 00000000 		.4byte	.LFB41
+ 2862 0034 2E000000 		.4byte	.LFE41
+ 2863 0038 00000000 		.4byte	.LFB42
+ 2864 003c 38000000 		.4byte	.LFE42
+ 2865 0040 00000000 		.4byte	.LFB39
+ 2866 0044 30000000 		.4byte	.LFE39
+ 2867 0048 00000000 		.4byte	.LFB33
+ 2868 004c D8010000 		.4byte	.LFE33
+ 2869 0050 00000000 		.4byte	0
+ 2870 0054 00000000 		.4byte	0
+ 2871              		.section	.debug_line,"",%progbits
+ 2872              	.Ldebug_line0:
+ 2873 0000 E3020000 		.section	.debug_str,"MS",%progbits,1
+ 2873      0200EC00 
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 73
+
+
+ 2873      00000201 
+ 2873      FB0E0D00 
+ 2873      01010101 
+ 2874              	.LASF57:
+ 2875 0000 78794469 		.ascii	"xyDirectionData\000"
+ 2875      72656374 
+ 2875      696F6E44 
+ 2875      61746100 
+ 2876              	.LASF55:
+ 2877 0010 70726576 		.ascii	"prevTouchPosition\000"
+ 2877      546F7563 
+ 2877      68506F73 
+ 2877      6974696F 
+ 2877      6E00
+ 2878              	.LASF35:
+ 2879 0022 69326349 		.ascii	"i2cInit\000"
+ 2879      6E697400 
+ 2880              	.LASF22:
+ 2881 002a 534C4F57 		.ascii	"SLOW_SCAN_MODE\000"
+ 2881      5F534341 
+ 2881      4E5F4D4F 
+ 2881      444500
+ 2882              	.LASF84:
+ 2883 0039 43617053 		.ascii	"CapSense_CSDSetupWidget\000"
+ 2883      656E7365 
+ 2883      5F435344 
+ 2883      53657475 
+ 2883      70576964 
+ 2884              	.LASF80:
+ 2885 0051 43795379 		.ascii	"CySysWdtUnmaskInterrupt\000"
+ 2885      73576474 
+ 2885      556E6D61 
+ 2885      736B496E 
+ 2885      74657272 
+ 2886              	.LASF76:
+ 2887 0069 43794578 		.ascii	"CyExitCriticalSection\000"
+ 2887      69744372 
+ 2887      69746963 
+ 2887      616C5365 
+ 2887      6374696F 
+ 2888              	.LASF69:
+ 2889 007f 4379456E 		.ascii	"CyEnterCriticalSection\000"
+ 2889      74657243 
+ 2889      72697469 
+ 2889      63616C53 
+ 2889      65637469 
+ 2890              	.LASF28:
+ 2891 0096 74656D70 		.ascii	"tempCoordinates\000"
+ 2891      436F6F72 
+ 2891      64696E61 
+ 2891      74657300 
+ 2892              	.LASF2:
+ 2893 00a6 73686F72 		.ascii	"short int\000"
+ 2893      7420696E 
+ 2893      7400
+ 2894              	.LASF25:
+ 2895 00b0 54696D65 		.ascii	"Timer_Interrupt\000"
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 74
+
+
+ 2895      725F496E 
+ 2895      74657272 
+ 2895      75707400 
+ 2896              	.LASF16:
+ 2897 00c0 73697A65 		.ascii	"sizetype\000"
+ 2897      74797065 
+ 2897      00
+ 2898              	.LASF52:
+ 2899 00c9 64657669 		.ascii	"deviceScanMode\000"
+ 2899      63655363 
+ 2899      616E4D6F 
+ 2899      646500
+ 2900              	.LASF33:
+ 2901 00d8 70726576 		.ascii	"prevfingerStatus\000"
+ 2901      66696E67 
+ 2901      65725374 
+ 2901      61747573 
+ 2901      00
+ 2902              	.LASF92:
+ 2903 00e9 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 2903      43313120 
+ 2903      352E342E 
+ 2903      31203230 
+ 2903      31363036 
+ 2904 011c 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0plus -mthumb -"
+ 2904      20726576 
+ 2904      6973696F 
+ 2904      6E203233 
+ 2904      37373135 
+ 2905 014f 67202D4F 		.ascii	"g -Og -ffunction-sections -ffat-lto-objects\000"
+ 2905      67202D66 
+ 2905      66756E63 
+ 2905      74696F6E 
+ 2905      2D736563 
+ 2906              	.LASF48:
+ 2907 017b 6D61696E 		.ascii	"main\000"
+ 2907      00
+ 2908              	.LASF71:
+ 2909 0180 43795379 		.ascii	"CySysClkIloStopMeasurement\000"
+ 2909      73436C6B 
+ 2909      496C6F53 
+ 2909      746F704D 
+ 2909      65617375 
+ 2910              	.LASF89:
+ 2911 019b 43617053 		.ascii	"CapSense_IsAnyWidgetActive\000"
+ 2911      656E7365 
+ 2911      5F497341 
+ 2911      6E795769 
+ 2911      64676574 
+ 2912              	.LASF17:
+ 2913 01b6 53454E53 		.ascii	"SENSOR_SCAN\000"
+ 2913      4F525F53 
+ 2913      43414E00 
+ 2914              	.LASF29:
+ 2915 01c2 70726576 		.ascii	"prevLeftClick\000"
+ 2915      4C656674 
+ 2915      436C6963 
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 75
+
+
+ 2915      6B00
+ 2916              	.LASF38:
+ 2917 01d0 696E6465 		.ascii	"index\000"
+ 2917      7800
+ 2918              	.LASF77:
+ 2919 01d6 43795379 		.ascii	"CySysClkIloCompensate\000"
+ 2919      73436C6B 
+ 2919      496C6F43 
+ 2919      6F6D7065 
+ 2919      6E736174 
+ 2920              	.LASF40:
+ 2921 01ec 656E7465 		.ascii	"enterDeepSleepLowPowerMode\000"
+ 2921      72446565 
+ 2921      70536C65 
+ 2921      65704C6F 
+ 2921      77506F77 
+ 2922              	.LASF9:
+ 2923 0207 75696E74 		.ascii	"uint8\000"
+ 2923      3800
+ 2924              	.LASF30:
+ 2925 020d 63757272 		.ascii	"currentLeftClick\000"
+ 2925      656E744C 
+ 2925      65667443 
+ 2925      6C69636B 
+ 2925      00
+ 2926              	.LASF74:
+ 2927 021e 455A4932 		.ascii	"EZI2C_Wakeup\000"
+ 2927      435F5761 
+ 2927      6B657570 
+ 2927      00
+ 2928              	.LASF0:
+ 2929 022b 7369676E 		.ascii	"signed char\000"
+ 2929      65642063 
+ 2929      68617200 
+ 2930              	.LASF62:
+ 2931 0237 43795379 		.ascii	"CySysWdtClearInterrupt\000"
+ 2931      73576474 
+ 2931      436C6561 
+ 2931      72496E74 
+ 2931      65727275 
+ 2932              	.LASF54:
+ 2933 024e 746F7563 		.ascii	"touchPosition\000"
+ 2933      68506F73 
+ 2933      6974696F 
+ 2933      6E00
+ 2934              	.LASF36:
+ 2935 025c 75706461 		.ascii	"updateI2cBuffer\000"
+ 2935      74654932 
+ 2935      63427566 
+ 2935      66657200 
+ 2936              	.LASF12:
+ 2937 026c 666C6F61 		.ascii	"float\000"
+ 2937      7400
+ 2938              	.LASF61:
+ 2939 0272 7764744D 		.ascii	"wdtMatchValue\000"
+ 2939      61746368 
+ 2939      56616C75 
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 76
+
+
+ 2939      6500
+ 2940              	.LASF6:
+ 2941 0280 6C6F6E67 		.ascii	"long long int\000"
+ 2941      206C6F6E 
+ 2941      6720696E 
+ 2941      7400
+ 2942              	.LASF88:
+ 2943 028e 43617053 		.ascii	"CapSense_GetXYCoordinates\000"
+ 2943      656E7365 
+ 2943      5F476574 
+ 2943      5859436F 
+ 2943      6F726469 
+ 2944              	.LASF94:
+ 2945 02a8 453A5C48 		.ascii	"E:\\Hackster Projects\\Infenion Microcontroller\\In"
+ 2945      61636B73 
+ 2945      74657220 
+ 2945      50726F6A 
+ 2945      65637473 
+ 2946 02d8 66696E65 		.ascii	"fineon-CY8CKIT-041-41XX_Example_Projects-Software-v"
+ 2946      6F6E2D43 
+ 2946      5938434B 
+ 2946      49542D30 
+ 2946      34312D34 
+ 2947 030b 30315F30 		.ascii	"01_00-EN\\PSoC 4100S\\CE216892 USB-HID Trackpad\\CE"
+ 2947      302D454E 
+ 2947      5C50536F 
+ 2947      43203431 
+ 2947      3030535C 
+ 2948 033b 32313638 		.ascii	"216892 USB-HID Trackpad.cydsn\000"
+ 2948      39322055 
+ 2948      53422D48 
+ 2948      49442054 
+ 2948      7261636B 
+ 2949              	.LASF60:
+ 2950 0359 77647449 		.ascii	"wdtInterruptOccured\000"
+ 2950      6E746572 
+ 2950      72757074 
+ 2950      4F636375 
+ 2950      72656400 
+ 2951              	.LASF1:
+ 2952 036d 756E7369 		.ascii	"unsigned char\000"
+ 2952      676E6564 
+ 2952      20636861 
+ 2952      7200
+ 2953              	.LASF32:
+ 2954 037b 63757272 		.ascii	"currentRightClick\000"
+ 2954      656E7452 
+ 2954      69676874 
+ 2954      436C6963 
+ 2954      6B00
+ 2955              	.LASF44:
+ 2956 038d 74656D70 		.ascii	"tempIloCounts\000"
+ 2956      496C6F43 
+ 2956      6F756E74 
+ 2956      7300
+ 2957              	.LASF19:
+ 2958 039b 50524F43 		.ascii	"PROCESS_DATA\000"
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 77
+
+
+ 2958      4553535F 
+ 2958      44415441 
+ 2958      00
+ 2959              	.LASF72:
+ 2960 03a8 455A4932 		.ascii	"EZI2C_Sleep\000"
+ 2960      435F536C 
+ 2960      65657000 
+ 2961              	.LASF15:
+ 2962 03b4 6C6F6E67 		.ascii	"long double\000"
+ 2962      20646F75 
+ 2962      626C6500 
+ 2963              	.LASF67:
+ 2964 03c0 455A4932 		.ascii	"EZI2C_Start\000"
+ 2964      435F5374 
+ 2964      61727400 
+ 2965              	.LASF79:
+ 2966 03cc 43795379 		.ascii	"CySysWdtGetCount\000"
+ 2966      73576474 
+ 2966      47657443 
+ 2966      6F756E74 
+ 2966      00
+ 2967              	.LASF63:
+ 2968 03dd 43795379 		.ascii	"CySysWdtGetMatch\000"
+ 2968      73576474 
+ 2968      4765744D 
+ 2968      61746368 
+ 2968      00
+ 2969              	.LASF39:
+ 2970 03ee 72657365 		.ascii	"resetDone\000"
+ 2970      74446F6E 
+ 2970      6500
+ 2971              	.LASF91:
+ 2972 03f8 43794861 		.ascii	"CyHalt\000"
+ 2972      6C7400
+ 2973              	.LASF59:
+ 2974 03ff 657A4932 		.ascii	"ezI2cBuffer\000"
+ 2974      63427566 
+ 2974      66657200 
+ 2975              	.LASF7:
+ 2976 040b 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 2976      206C6F6E 
+ 2976      6720756E 
+ 2976      7369676E 
+ 2976      65642069 
+ 2977              	.LASF75:
+ 2978 0422 43795379 		.ascii	"CySysClkIloStartMeasurement\000"
+ 2978      73436C6B 
+ 2978      496C6F53 
+ 2978      74617274 
+ 2978      4D656173 
+ 2979              	.LASF65:
+ 2980 043e 43617053 		.ascii	"CapSense_Start\000"
+ 2980      656E7365 
+ 2980      5F537461 
+ 2980      727400
+ 2981              	.LASF8:
+ 2982 044d 756E7369 		.ascii	"unsigned int\000"
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 78
+
+
+ 2982      676E6564 
+ 2982      20696E74 
+ 2982      00
+ 2983              	.LASF68:
+ 2984 045a 455A4932 		.ascii	"EZI2C_EzI2CSetBuffer1\000"
+ 2984      435F457A 
+ 2984      49324353 
+ 2984      65744275 
+ 2984      66666572 
+ 2985              	.LASF86:
+ 2986 0470 43795379 		.ascii	"CySysPmSleep\000"
+ 2986      73506D53 
+ 2986      6C656570 
+ 2986      00
+ 2987              	.LASF53:
+ 2988 047d 66696E67 		.ascii	"fingerStatus\000"
+ 2988      65725374 
+ 2988      61747573 
+ 2988      00
+ 2989              	.LASF45:
+ 2990 048a 64657369 		.ascii	"desiredDelay\000"
+ 2990      72656444 
+ 2990      656C6179 
+ 2990      00
+ 2991              	.LASF3:
+ 2992 0497 73686F72 		.ascii	"short unsigned int\000"
+ 2992      7420756E 
+ 2992      7369676E 
+ 2992      65642069 
+ 2992      6E7400
+ 2993              	.LASF64:
+ 2994 04aa 43795379 		.ascii	"CySysWdtSetMatch\000"
+ 2994      73576474 
+ 2994      5365744D 
+ 2994      61746368 
+ 2994      00
+ 2995              	.LASF14:
+ 2996 04bb 63686172 		.ascii	"char\000"
+ 2996      00
+ 2997              	.LASF42:
+ 2998 04c0 5F426F6F 		.ascii	"_Bool\000"
+ 2998      6C00
+ 2999              	.LASF4:
+ 3000 04c6 6C6F6E67 		.ascii	"long int\000"
+ 3000      20696E74 
+ 3000      00
+ 3001              	.LASF34:
+ 3002 04cf 63757272 		.ascii	"currentfingerStatus\000"
+ 3002      656E7466 
+ 3002      696E6765 
+ 3002      72537461 
+ 3002      74757300 
+ 3003              	.LASF73:
+ 3004 04e3 43795379 		.ascii	"CySysPmDeepSleep\000"
+ 3004      73506D44 
+ 3004      65657053 
+ 3004      6C656570 
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 79
+
+
+ 3004      00
+ 3005              	.LASF18:
+ 3006 04f4 57414954 		.ascii	"WAIT_FOR_SCAN_COMPLETE\000"
+ 3006      5F464F52 
+ 3006      5F534341 
+ 3006      4E5F434F 
+ 3006      4D504C45 
+ 3007              	.LASF49:
+ 3008 050b 63757272 		.ascii	"currentState\000"
+ 3008      656E7453 
+ 3008      74617465 
+ 3008      00
+ 3009              	.LASF31:
+ 3010 0518 70726576 		.ascii	"prevRightClick\000"
+ 3010      52696768 
+ 3010      74436C69 
+ 3010      636B00
+ 3011              	.LASF47:
+ 3012 0527 616E7957 		.ascii	"anyWidgetActive\000"
+ 3012      69646765 
+ 3012      74416374 
+ 3012      69766500 
+ 3013              	.LASF85:
+ 3014 0537 43617053 		.ascii	"CapSense_Scan\000"
+ 3014      656E7365 
+ 3014      5F536361 
+ 3014      6E00
+ 3015              	.LASF10:
+ 3016 0545 75696E74 		.ascii	"uint16\000"
+ 3016      313600
+ 3017              	.LASF26:
+ 3018 054c 63617053 		.ascii	"capSenseInit\000"
+ 3018      656E7365 
+ 3018      496E6974 
+ 3018      00
+ 3019              	.LASF41:
+ 3020 0559 696E7465 		.ascii	"interruptState\000"
+ 3020      72727570 
+ 3020      74537461 
+ 3020      746500
+ 3021              	.LASF11:
+ 3022 0568 75696E74 		.ascii	"uint32\000"
+ 3022      333200
+ 3023              	.LASF93:
+ 3024 056f 6D61696E 		.ascii	"main.c\000"
+ 3024      2E6300
+ 3025              	.LASF5:
+ 3026 0576 6C6F6E67 		.ascii	"long unsigned int\000"
+ 3026      20756E73 
+ 3026      69676E65 
+ 3026      6420696E 
+ 3026      7400
+ 3027              	.LASF13:
+ 3028 0588 646F7562 		.ascii	"double\000"
+ 3028      6C6500
+ 3029              	.LASF81:
+ 3030 058f 4379496E 		.ascii	"CyIntEnable\000"
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 80
+
+
+ 3030      74456E61 
+ 3030      626C6500 
+ 3031              	.LASF20:
+ 3032 059b 44454550 		.ascii	"DEEP_SLEEP\000"
+ 3032      5F534C45 
+ 3032      455000
+ 3033              	.LASF70:
+ 3034 05a6 455A4932 		.ascii	"EZI2C_EzI2CGetActivity\000"
+ 3034      435F457A 
+ 3034      49324347 
+ 3034      65744163 
+ 3034      74697669 
+ 3035              	.LASF51:
+ 3036 05bd 63757272 		.ascii	"currentWidget\000"
+ 3036      656E7457 
+ 3036      69646765 
+ 3036      7400
+ 3037              	.LASF83:
+ 3038 05cb 43617053 		.ascii	"CapSense_IsBusy\000"
+ 3038      656E7365 
+ 3038      5F497342 
+ 3038      75737900 
+ 3039              	.LASF37:
+ 3040 05db 63686563 		.ascii	"checksum\000"
+ 3040      6B73756D 
+ 3040      00
+ 3041              	.LASF78:
+ 3042 05e4 4379496E 		.ascii	"CyIntSetVector\000"
+ 3042      74536574 
+ 3042      56656374 
+ 3042      6F7200
+ 3043              	.LASF46:
+ 3044 05f3 5744545F 		.ascii	"WDT_Start\000"
+ 3044      53746172 
+ 3044      7400
+ 3045              	.LASF58:
+ 3046 05fd 6D6F7573 		.ascii	"mouseClickData\000"
+ 3046      65436C69 
+ 3046      636B4461 
+ 3046      746100
+ 3047              	.LASF27:
+ 3048 060c 6D6F7573 		.ascii	"mouseDataProcess\000"
+ 3048      65446174 
+ 3048      6150726F 
+ 3048      63657373 
+ 3048      00
+ 3049              	.LASF87:
+ 3050 061d 43617053 		.ascii	"CapSense_ProcessWidget\000"
+ 3050      656E7365 
+ 3050      5F50726F 
+ 3050      63657373 
+ 3050      57696467 
+ 3051              	.LASF24:
+ 3052 0634 5343414E 		.ascii	"SCAN_MODE\000"
+ 3052      5F4D4F44 
+ 3052      4500
+ 3053              	.LASF56:
+ARM GAS  C:\Users\Asus\AppData\Local\Temp\cc7iUwpi.s 			page 81
+
+
+ 3054 063e 64696666 		.ascii	"diffPosition\000"
+ 3054      506F7369 
+ 3054      74696F6E 
+ 3054      00
+ 3055              	.LASF23:
+ 3056 064b 46415354 		.ascii	"FAST_SCAN_MODE\000"
+ 3056      5F534341 
+ 3056      4E5F4D4F 
+ 3056      444500
+ 3057              	.LASF90:
+ 3058 065a 5265645F 		.ascii	"Red_LED_Write\000"
+ 3058      4C45445F 
+ 3058      57726974 
+ 3058      6500
+ 3059              	.LASF82:
+ 3060 0668 43794465 		.ascii	"CyDelay\000"
+ 3060      6C617900 
+ 3061              	.LASF50:
+ 3062 0670 74696D65 		.ascii	"timeoutCounter\000"
+ 3062      6F757443 
+ 3062      6F756E74 
+ 3062      657200
+ 3063              	.LASF43:
+ 3064 067f 43616C69 		.ascii	"CalibrateWdtMatchValue\000"
+ 3064      62726174 
+ 3064      65576474 
+ 3064      4D617463 
+ 3064      6856616C 
+ 3065              	.LASF66:
+ 3066 0696 43617053 		.ascii	"CapSense_IsWidgetActive\000"
+ 3066      656E7365 
+ 3066      5F497357 
+ 3066      69646765 
+ 3066      74416374 
+ 3067              	.LASF21:
+ 3068 06ae 44455649 		.ascii	"DEVICE_STATE\000"
+ 3068      43455F53 
+ 3068      54415445 
+ 3068      00
+ 3069              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

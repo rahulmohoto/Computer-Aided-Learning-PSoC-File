@@ -1,0 +1,6 @@
+E:\Hackster Projects\Infenion Microcontroller\Infineon-CY8CKIT-041-41XX_Example_Projects-Software-v01_00-EN\PSoC 4100S\CE216892 USB-HID Trackpad\CE216892 USB-HID Trackpad.cydsn\CE216892 USB-HID Trackpad.cyprj|976aae25-7a53-4677-af45-1784ba778183
+C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\default\CyAnnotationLibrary\CyAnnotationLibrary.cylib\CyAnnotationLibrary.cyprj|3b70a0b5-26c1-4498-aec6-da8380f64851
+C:\Users\Asus\Documents\PSoC Creator\4.4\Downloads ( 4.4).cylib\Downloads ( 4.4).cyprj|f8de7ce1-3737-40b0-a184-73211cfee2ab
+C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\cycomponentlibraryupdates\CyComponentLibraryUpdates.cylib\CyComponentLibraryUpdates.cyprj|bb988af2-6fc1-43ad-a014-b8b5acdef2cd
+C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\cycomponentlibrary\CyComponentLibrary.cylib\CyComponentLibrary.cyprj|72dfd7ac-8078-4cfb-8a75-d7df4ce0d126
+C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\cyprimitives\CyPrimitives.cylib\CyPrimitives.cyprj|3152c0da-d012-49c4-9c22-b4625e97b45e
